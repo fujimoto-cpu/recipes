@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>レシピ図書館</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>🍳 レシピ図書館</h1>
+  <p class="subtitle">保存したレシピを画像・動画つきで一覧。食材から逆引き＆カロリー順で探せる。</p>
+</header>
+
+<main>
+  <section class="controls">
+    <input type="text" id="search" placeholder="料理名・食材・タグで検索" />
+    <div class="control-buttons">
+      <button id="sort-kcal">🔥 低カロリー順</button>
+      <button id="reset-all">↺ すべて表示</button>
+    </div>
+  </section>
+
+  <section class="chips" id="chips"></section>
+
+  <section class="grid" id="grid"></section>
+</main>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
