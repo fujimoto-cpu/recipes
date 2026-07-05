@@ -88,6 +88,17 @@ main {
   color: #993556;
 }
 
+.chip-toggle {
+  color: #185fa5;
+  border-style: dashed;
+}
+
+.match-count {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 12px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -153,8 +164,21 @@ main {
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
+}
+
+.kcal-badge.low {
+  background: #eaf3de;
+  color: #3b6d11;
+}
+
+.kcal-badge.mid {
   background: #faeeda;
   color: #854f0b;
+}
+
+.kcal-badge.high {
+  background: #faece7;
+  color: #993c1d;
 }
 
 .kcal-badge.unknown {

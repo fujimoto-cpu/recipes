@@ -24,6 +24,38 @@ RECIPE_FILES = [
     "🍳 レシピ_野菜がもりもり食べられる🥕🥒✨.md",
     "【小松菜漬け】切って漬けるだけなのに驚くほど美味しい！簡単レシピきざみ菜.md",
     "🍳 レシピ_一生健康！腸活レシピはこちら▽.md",
+    # Expansion batch (2026-07-05)
+    "@ariru_healthy_oyatsu ←太らない簡単おやつを見る♡.md",
+    "GW中に痩せるにんじんサラダ3選ー！🥕🥕.md",
+    "↑他の野菜レシピはココ👩🏻‍🍳🥗.md",
+    "↑ フォローして他のレシピも見る👀♡.md",
+    "▽レシピはこちら▽.md",
+    "⚫︎タルティーヌ集.md",
+    "【激痩せ冷凍ブリトー】この1本で1食分を補える完全メシ！高タンパク・低脂質・低カロリーな『完全栄養冷凍ブリトー』の作り方.md",
+    "これ、めちゃくちゃ美味しいのに.md",
+    "フライパン1つ。15分ほぼ放置でネギ塩レモンチキンパエリア.md",
+    "レシピ_オートミールリゾット.md",
+    "レシピ_お弁当.md",
+    "レシピ_オートミールリゾット 220kcal_ちゃぴさん.md",
+    "切って漬けるだけ【無限きゅうり漬け】簡単で美味しすぎる！ご飯が止まらない！時短でやみつき居酒屋風きゅうりの浅漬け♪おつまみレシピ【作り置き・大量消費レシピ・常備.md",
+    "大好物のヘルシーおつまみを4品作ります🍳.md",
+    "国産干し芋25%OFF🍠😍.md",
+    "半年で10kg痩せた秘密のレシピ❤️.md",
+    "散らからないおやつ3選.md",
+    "梅酒を作って数年後に集まって飲もうとなり、俺も作ってみた！！.md",
+    "産後17kg痩せたダイエットレシピはこちら▶︎ @hina_recipe_diet.md",
+    "減量してた時.md",
+    "詳しいレシピはコメント欄に✍️💬.md",
+    "豚トマレタス🍅𓂃𓈒𓏸︎︎︎︎.md",
+    "農家の娘はもやしをこう食べる。.md",
+    "食事改善で-7kgキープする秘訣🤫👇🏻.md",
+    "食べすぎなくして10kg痩せた秘訣😶.md",
+    "詳細はこちら↓🐈‍⬛.md",
+    "🍳 レシピ_ず〜〜っと食べてみたかったパニプリ🇮🇳.md",
+    "🍳 レシピ_🏷️モッツァレラのクリームマリネ.md",
+    "🍳 レシピ_レシピはこちら💁‍♀️.md",
+    "🍳 レシピ_４時起きした日の朝ごはんvlog🍙.md",
+    "🎇 AI_👈ラーメン欲これで満たしてください😏.md",
 ]
 
 EMBED_RE = re.compile(r"!\[\[(.+?)\]\]")
@@ -100,9 +132,13 @@ def extract_caption(body):
     return text[:150]
 
 
-def resolve_source(fm):
+def resolve_source(fm, body=""):
     source = fm.get("source", "unknown")
     url = fm.get("url", "")
+    if not url:
+        m = re.search(r"https://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)[\w-]+", body)
+        if m:
+            url = m.group(0)
     if "youtube.com" in url or "youtu.be" in url:
         source = "youtube"
     elif source == "threads":
@@ -113,20 +149,31 @@ def resolve_source(fm):
     return {"type": source, "url": url, "handle": handle}
 
 
-def build_media(embed_path, source_info, rid):
+def resolve_vault_path(embed_path):
+    """Obsidian allows bare-filename wikilinks that resolve via vault-wide
+    index; we don't have that index, so fall back to a filename search."""
+    direct = VAULT / embed_path
+    if direct.exists():
+        return direct
+    basename = Path(embed_path).name
+    matches = list(VAULT.rglob(basename))
+    return matches[0] if matches else None
+
+
+def build_media(embed_path, source_info, rid, body=""):
     if embed_path:
-        src = VAULT / embed_path
-        if src.exists():
+        src = resolve_vault_path(embed_path)
+        if src is not None:
             ext = src.suffix
             dest_name = f"{rid}{ext}"
             shutil.copy2(src, ASSETS / dest_name)
             mtype = "video" if ext.lower() in (".mp4", ".mov") else "image"
             return {"type": mtype, "file": f"assets/{dest_name}"}
-    if source_info["type"] == "youtube":
-        m = YT_ID_RE.search(source_info["url"])
-        if m:
-            yid = m.group(1)
-            return {"type": "youtube", "thumb": f"https://img.youtube.com/vi/{yid}/hqdefault.jpg", "youtube_id": yid}
+    yt_source = source_info["url"] if source_info["type"] == "youtube" else body
+    m = YT_ID_RE.search(yt_source)
+    if m:
+        yid = m.group(1)
+        return {"type": "youtube", "thumb": f"https://img.youtube.com/vi/{yid}/hqdefault.jpg", "youtube_id": yid}
     return {"type": "none", "file": None}
 
 
@@ -139,9 +186,9 @@ def main():
         fm, body = parse_frontmatter(text)
 
         rid = slugify_id(fname)
-        source_info = resolve_source(fm)
+        source_info = resolve_source(fm, body)
         embed_path = find_embed(body)
-        media = build_media(embed_path, source_info, rid)
+        media = build_media(embed_path, source_info, rid, body)
 
         recipes.append({
             "id": rid,

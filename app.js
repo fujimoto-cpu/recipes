@@ -10,31 +10,59 @@ async function init() {
   renderGrid();
 }
 
-function allIngredients() {
-  const set = new Set();
-  RECIPES.forEach(r => r.ingredients.forEach(i => set.add(i)));
-  return [...set].sort();
+let chipsExpanded = false;
+
+function ingredientCounts() {
+  const counts = new Map();
+  RECIPES.forEach(r => r.ingredients.forEach(i => counts.set(i, (counts.get(i) || 0) + 1)));
+  return counts;
+}
+
+function makeChip(ing) {
+  const chip = document.createElement("span");
+  chip.className = "chip" + (activeIngredients.has(ing) ? " active" : "");
+  chip.textContent = ing;
+  chip.onclick = () => {
+    if (activeIngredients.has(ing)) {
+      activeIngredients.delete(ing);
+    } else {
+      activeIngredients.add(ing);
+    }
+    renderChips();
+    renderGrid();
+  };
+  return chip;
 }
 
 function renderChips() {
   const el = document.getElementById("chips");
   el.innerHTML = "";
-  allIngredients().forEach(ing => {
-    const chip = document.createElement("span");
-    chip.className = "chip";
-    chip.textContent = ing;
-    chip.onclick = () => {
-      if (activeIngredients.has(ing)) {
-        activeIngredients.delete(ing);
-        chip.classList.remove("active");
-      } else {
-        activeIngredients.add(ing);
-        chip.classList.add("active");
-      }
-      renderGrid();
+  const counts = ingredientCounts();
+  const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ja"));
+  const POPULAR_THRESHOLD = RECIPES.length > 20 ? 3 : 2;
+  const popular = sorted.filter(([, n]) => n >= POPULAR_THRESHOLD).map(([ing]) => ing);
+  const rest = sorted.filter(([, n]) => n < POPULAR_THRESHOLD).map(([ing]) => ing);
+
+  // Always show any already-active ingredient, even if it's in the "rest" bucket.
+  const alwaysShow = [...activeIngredients].filter(ing => !popular.includes(ing));
+  popular.concat(alwaysShow).forEach(ing => el.appendChild(makeChip(ing)));
+
+  if (rest.filter(ing => !alwaysShow.includes(ing)).length > 0) {
+    const toggle = document.createElement("span");
+    toggle.className = "chip chip-toggle";
+    toggle.textContent = chipsExpanded ? "− 閉じる" : `+ もっと見る（${rest.length}）`;
+    toggle.onclick = () => {
+      chipsExpanded = !chipsExpanded;
+      renderChips();
     };
-    el.appendChild(chip);
-  });
+    el.appendChild(toggle);
+
+    if (chipsExpanded) {
+      rest.forEach(ing => {
+        if (!alwaysShow.includes(ing)) el.appendChild(makeChip(ing));
+      });
+    }
+  }
 }
 
 function matches(r) {
@@ -64,9 +92,16 @@ function mediaThumbHtml(r) {
   return "";
 }
 
+function kcalLevel(kcal) {
+  if (kcal < 200) return "low";
+  if (kcal < 400) return "mid";
+  return "high";
+}
+
 function kcalBadgeHtml(r) {
   if (r.nutrition && r.nutrition.calories_kcal != null) {
-    return `<span class="kcal-badge">🔥 ${r.nutrition.calories_kcal}kcal</span>`;
+    const kcal = r.nutrition.calories_kcal;
+    return `<span class="kcal-badge ${kcalLevel(kcal)}">🔥 ${kcal}kcal</span>`;
   }
   return `<span class="kcal-badge unknown">kcal不明</span>`;
 }
@@ -82,6 +117,10 @@ function renderGrid() {
       return ka - kb;
     });
   }
+
+  const countEl = document.getElementById("match-count");
+  const isFiltered = activeIngredients.size > 0 || searchTerm;
+  countEl.textContent = isFiltered ? `${RECIPES.length}件中 ${list.length}件表示` : "";
 
   if (list.length === 0) {
     grid.innerHTML = `<div class="empty-state">条件に合うレシピが見つからなかった</div>`;
@@ -118,15 +157,15 @@ function openModal(id) {
   }
 
   let nutritionHtml = "";
-  if (r.nutrition) {
+  if (r.nutrition && r.nutrition.calories_kcal != null) {
+    const n = r.nutrition;
+    const items = [`<span class="nutrition-item">🔥 ${n.calories_kcal}kcal</span>`];
+    if (n.protein_g != null) items.push(`<span class="nutrition-item">たんぱく質 ${n.protein_g}g</span>`);
+    if (n.fat_g != null) items.push(`<span class="nutrition-item">脂質 ${n.fat_g}g</span>`);
+    if (n.carbs_g != null) items.push(`<span class="nutrition-item">炭水化物 ${n.carbs_g}g</span>`);
     nutritionHtml = `
       <h3>カロリー・栄養成分</h3>
-      <div class="nutrition-row">
-        <span class="nutrition-item">🔥 ${r.nutrition.calories_kcal}kcal</span>
-        <span class="nutrition-item">たんぱく質 ${r.nutrition.protein_g}g</span>
-        <span class="nutrition-item">脂質 ${r.nutrition.fat_g}g</span>
-        <span class="nutrition-item">炭水化物 ${r.nutrition.carbs_g}g</span>
-      </div>`;
+      <div class="nutrition-row">${items.join("")}</div>`;
   } else {
     nutritionHtml = `<h3>カロリー・栄養成分</h3><p style="font-size:13px;color:#999;">元投稿に記載なし</p>`;
   }
