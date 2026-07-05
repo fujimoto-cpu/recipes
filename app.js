@@ -3,9 +3,93 @@ let activeIngredients = new Set();
 let searchTerm = "";
 let sortedByKcal = false;
 
+const CART_KEY = "recipe-site-cart";
+function loadCart() {
+  try {
+    return new Map(JSON.parse(localStorage.getItem(CART_KEY) || "[]"));
+  } catch {
+    return new Map();
+  }
+}
+function saveCart(cart) {
+  localStorage.setItem(CART_KEY, JSON.stringify([...cart]));
+}
+let cart = loadCart();
+
+function updateCartCount() {
+  document.getElementById("cart-count").textContent = cart.size;
+}
+
+function addRecipeToCart(recipe) {
+  recipe.ingredients.forEach(ing => {
+    const sources = cart.get(ing) || [];
+    if (!sources.includes(recipe.title)) sources.push(recipe.title);
+    cart.set(ing, sources);
+  });
+  saveCart(cart);
+  updateCartCount();
+}
+
+function removeFromCart(ing) {
+  cart.delete(ing);
+  saveCart(cart);
+  updateCartCount();
+  renderCart();
+}
+
+function renderCart() {
+  const items = [...cart.entries()];
+  const rows = items.length
+    ? items.map(([ing, sources]) => `
+      <div class="cart-item-row">
+        <span>${ing}<span style="color:#999; font-size:12px;"> — ${sources.join("・")}</span></span>
+        <button data-ing="${ing}" class="cart-remove">✕</button>
+      </div>`).join("")
+    : `<p style="color:#999; font-size:14px;">まだ何も入ってない。レシピの詳細から「買い物リストに追加」してね</p>`;
+
+  document.getElementById("cart-content").innerHTML = `
+    <button class="modal-close" id="cart-close">✕</button>
+    <h2>🛒 買い物リスト</h2>
+    ${rows}
+    ${items.length ? `
+      <div style="display:flex; gap:8px; margin-top:16px;">
+        <button id="cart-copy">📋 コピー</button>
+        <button id="cart-clear">すべて削除</button>
+      </div>` : ""}
+  `;
+  document.getElementById("cart-close").onclick = () => document.getElementById("cart-overlay").classList.remove("open");
+  document.querySelectorAll(".cart-remove").forEach(btn => {
+    btn.onclick = () => removeFromCart(btn.dataset.ing);
+  });
+  if (items.length) {
+    document.getElementById("cart-copy").onclick = () => {
+      const text = items.map(([ing]) => ing).join("\n");
+      navigator.clipboard.writeText(text);
+      const btn = document.getElementById("cart-copy");
+      btn.textContent = "✓ コピーした";
+      setTimeout(() => { btn.textContent = "📋 コピー"; }, 1500);
+    };
+    document.getElementById("cart-clear").onclick = () => {
+      cart.clear();
+      saveCart(cart);
+      updateCartCount();
+      renderCart();
+    };
+  }
+}
+
+document.getElementById("cart-button").addEventListener("click", () => {
+  renderCart();
+  document.getElementById("cart-overlay").classList.add("open");
+});
+document.getElementById("cart-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "cart-overlay") e.currentTarget.classList.remove("open");
+});
+
 async function init() {
   const res = await fetch("data.json");
   RECIPES = await res.json();
+  updateCartCount();
   renderChips();
   renderGrid();
 }
@@ -186,12 +270,19 @@ function openModal(id) {
     <h2>${r.title}</h2>
     <h3>材料</h3>
     <ul>${r.ingredients.map(i => `<li>${i}</li>`).join("")}</ul>
+    <button id="add-to-cart" style="margin-top:8px;">🛒 買い物リストに追加</button>
     ${nutritionHtml}
     ${stepsHtml}
     ${captionHtml}
     <a class="source-link" href="${r.source.url}" target="_blank" rel="noopener">${sourceLabel} ↗</a>
   `;
   document.getElementById("modal-close").onclick = closeModal;
+  document.getElementById("add-to-cart").onclick = () => {
+    addRecipeToCart(r);
+    const btn = document.getElementById("add-to-cart");
+    btn.textContent = "✓ 追加した";
+    setTimeout(() => { btn.textContent = "🛒 買い物リストに追加"; }, 1200);
+  };
   document.getElementById("modal-overlay").classList.add("open");
 }
 

@@ -8,8 +8,13 @@
 </head>
 <body>
 <header class="topbar">
-  <h1>🍳 レシピ図書館</h1>
-  <p class="subtitle">保存したレシピを画像・動画つきで一覧。食材から逆引き＆カロリー順で探せる。</p>
+  <div class="topbar-row">
+    <div>
+      <h1>🍳 レシピ図書館</h1>
+      <p class="subtitle">保存したレシピを画像・動画つきで一覧。食材から逆引き＆カロリー順で探せる。</p>
+    </div>
+    <button id="cart-button">🛒 買い物リスト <span id="cart-count">0</span></button>
+  </div>
 </header>
 
 <main>
@@ -30,6 +35,10 @@
 
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal" id="modal-content"></div>
+</div>
+
+<div class="modal-overlay" id="cart-overlay">
+  <div class="modal" id="cart-content"></div>
 </div>
 
 <script src="app.js"></script>

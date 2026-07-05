@@ -3,6 +3,7 @@ import re
 import json
 import shutil
 import hashlib
+import unicodedata
 from pathlib import Path
 
 import yaml
@@ -11,52 +12,24 @@ VAULT = Path("/Users/yuriko/Documents/corin")
 LIT = VAULT / "20_📂 zettelkasten" / "LiteratureNote"
 ASSETS = Path(__file__).parent / "assets"
 
-# Source of truth: the 10 prototype recipe notes (frontmatter already
-# structured with dish_name / ingredients / nutrition by CORIN).
-RECIPE_FILES = [
-    "レシピ_丸ごと腸活サラダ（にんじん・さつまいも）.md",
-    "レシピ_ローデッドチップス（サーモン＆いくら）.md",
-    "＼簡単可愛いお弁当／.md",
-    "🍳 レシピ_レシピ、ポイントは👇.md",
-    "🍳 レシピ_トマトのサラダ.md",
-    "🍳 レシピ_痩せる最強ボウル（にんじん）.md",
-    "🫧 キウイヨーグルトアイスのレシピ.md",
-    "🍳 レシピ_野菜がもりもり食べられる🥕🥒✨.md",
-    "【小松菜漬け】切って漬けるだけなのに驚くほど美味しい！簡単レシピきざみ菜.md",
-    "🍳 レシピ_一生健康！腸活レシピはこちら▽.md",
-    # Expansion batch (2026-07-05)
-    "@ariru_healthy_oyatsu ←太らない簡単おやつを見る♡.md",
-    "GW中に痩せるにんじんサラダ3選ー！🥕🥕.md",
-    "↑他の野菜レシピはココ👩🏻‍🍳🥗.md",
-    "↑ フォローして他のレシピも見る👀♡.md",
-    "▽レシピはこちら▽.md",
-    "⚫︎タルティーヌ集.md",
-    "【激痩せ冷凍ブリトー】この1本で1食分を補える完全メシ！高タンパク・低脂質・低カロリーな『完全栄養冷凍ブリトー』の作り方.md",
-    "これ、めちゃくちゃ美味しいのに.md",
-    "フライパン1つ。15分ほぼ放置でネギ塩レモンチキンパエリア.md",
-    "レシピ_オートミールリゾット.md",
-    "レシピ_お弁当.md",
-    "レシピ_オートミールリゾット 220kcal_ちゃぴさん.md",
-    "切って漬けるだけ【無限きゅうり漬け】簡単で美味しすぎる！ご飯が止まらない！時短でやみつき居酒屋風きゅうりの浅漬け♪おつまみレシピ【作り置き・大量消費レシピ・常備.md",
-    "大好物のヘルシーおつまみを4品作ります🍳.md",
-    "国産干し芋25%OFF🍠😍.md",
-    "半年で10kg痩せた秘密のレシピ❤️.md",
-    "散らからないおやつ3選.md",
-    "梅酒を作って数年後に集まって飲もうとなり、俺も作ってみた！！.md",
-    "産後17kg痩せたダイエットレシピはこちら▶︎ @hina_recipe_diet.md",
-    "減量してた時.md",
-    "詳しいレシピはコメント欄に✍️💬.md",
-    "豚トマレタス🍅𓂃𓈒𓏸︎︎︎︎.md",
-    "農家の娘はもやしをこう食べる。.md",
-    "食事改善で-7kgキープする秘訣🤫👇🏻.md",
-    "食べすぎなくして10kg痩せた秘訣😶.md",
-    "詳細はこちら↓🐈‍⬛.md",
-    "🍳 レシピ_ず〜〜っと食べてみたかったパニプリ🇮🇳.md",
-    "🍳 レシピ_🏷️モッツァレラのクリームマリネ.md",
-    "🍳 レシピ_レシピはこちら💁‍♀️.md",
-    "🍳 レシピ_４時起きした日の朝ごはんvlog🍙.md",
-    "🎇 AI_👈ラーメン欲これで満たしてください😏.md",
-]
+# Auto-discovery: any LiteratureNote whose frontmatter has been structured
+# with `dish_name` (CORIN / wiki-ingest's recipe format marker) is picked up
+# automatically. This is what makes "save a recipe -> site updates itself"
+# possible without hand-editing a file list each time.
+# See .claude/skills/wiki-ingest/SKILL.md (recipe format) and
+# .claude/skills/recipe-site/SKILL.md (this build + publish step) in the
+# corin vault for how new recipes flow in.
+def discover_recipe_files():
+    names = []
+    for path in sorted(LIT.glob("*.md")):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        fm, _ = parse_frontmatter(text)
+        if fm.get("dish_name"):
+            names.append(path.name)
+    return names
 
 EMBED_RE = re.compile(r"!\[\[(.+?)\]\]")
 YT_ID_RE = re.compile(r"(?:v=|youtu\.be/)([\w-]+)")
@@ -81,7 +54,11 @@ def find_embed(body):
 
 
 def slugify_id(name):
-    return hashlib.sha1(name.encode("utf-8")).hexdigest()[:10]
+    # Normalize first: macOS/APFS glob() can return NFD-decomposed Japanese
+    # filenames while a hand-typed string literal is NFC, and those hash
+    # differently even though they're "the same" filename on disk.
+    normalized = unicodedata.normalize("NFC", name)
+    return hashlib.sha1(normalized.encode("utf-8")).hexdigest()[:10]
 
 
 def extract_steps(body):
@@ -180,7 +157,7 @@ def build_media(embed_path, source_info, rid, body=""):
 def main():
     ASSETS.mkdir(exist_ok=True)
     recipes = []
-    for fname in RECIPE_FILES:
+    for fname in discover_recipe_files():
         path = LIT / fname
         text = path.read_text(encoding="utf-8")
         fm, body = parse_frontmatter(text)
