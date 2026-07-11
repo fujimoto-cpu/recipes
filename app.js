@@ -4,8 +4,18 @@ let searchTerm = "";
 let sortedByKcal = false;
 let currentView = "all"; // all | want | staple
 let homeStock = [];      // 🏠 いま家にあるもの（pantry.json・CORIN管理／買い物リストからも自動除外）
-let freshStock = [];     // 🧾 最近買ったもの（recent-buys.json・レシートからCORINが追記／数日で自動フェード）
+let freshStock = [];     // 🧾 最近買ったもの（下記2ソースを合成／数日で自動フェード）
 const FRESH_DAYS = 6;    // 買ってから何日「手持ち」とみなすか（生鮮の消費想定）
+let jsonBuys = [];       // recent-buys.json（CORINがレシートから追記）
+const BUYS_KEY = "recipe-site-buys"; // 📸 サイトで手動追加した買ったもの（携帯・localStorage）
+const loadBuys = () => { try { return JSON.parse(localStorage.getItem(BUYS_KEY)) || []; } catch { return []; } };
+const saveBuys = (a) => localStorage.setItem(BUYS_KEY, JSON.stringify(a));
+const withinFresh = (d) => (Date.now() - new Date(d).getTime()) / 86400000 <= FRESH_DAYS;
+// recent-buys.json（CORIN）＋localStorage（サイト手動追加）を合成し、FRESH_DAYS以内だけ手持ちに。
+function computeFresh() {
+  const all = [...jsonBuys, ...loadBuys()].filter(b => b && b.item && b.date && withinFresh(b.date));
+  freshStock = [...new Set(all.map(b => b.item))];
+}
 
 // ---------- storage ----------
 const CART_KEY = "recipe-site-cart";     // Map<ingredient, [recipe titles]>
@@ -191,15 +201,9 @@ async function init() {
   } catch { /* pantry.json が無くても動く */ }
   try {
     const bres = await fetch("recent-buys.json");
-    if (bres.ok) {
-      const buys = await bres.json();
-      const now = Date.now();
-      // 買った日から FRESH_DAYS 以内のものだけ「手持ち」に。古い生鮮は自動で消える。
-      freshStock = buys
-        .filter(b => b && b.item && b.date && (now - new Date(b.date).getTime()) / 86400000 <= FRESH_DAYS)
-        .map(b => b.item);
-    }
+    if (bres.ok) jsonBuys = await bres.json();
   } catch { /* recent-buys.json が無くても動く */ }
+  computeFresh(); // recent-buys.json ＋ サイト手動追加(localStorage) を合成
   updateCartCount();
   renderPantryBar();
   renderTabs();
@@ -408,6 +412,60 @@ function handleAction(act, id) {
   renderGrid();
 }
 
+// ---------- 📸 買ったもの追加（携帯・サーバー不要・localStorage） ----------
+function refreshBuys() { computeFresh(); renderPantryBar(); renderTabs(); renderGrid(); }
+
+function openBuysModal() {
+  const counts = ingredientCounts();
+  const suggestions = [...counts.entries()]
+    .filter(([ing]) => !isPantry(ing) && !freshStock.includes(ing))
+    .sort((a, b) => b[1] - a[1]).slice(0, 12).map(([ing]) => ing);
+  const local = loadBuys();
+  const chips = suggestions.length
+    ? suggestions.map(s => `<button class="buy-suggest" data-item="${s}">＋${s}</button>`).join("")
+    : `<span class="muted">—</span>`;
+  const list = local.length
+    ? local.map(b => `<li>${b.item}<button class="buy-remove" data-item="${b.item}">使った✓</button></li>`).join("")
+    : `<li class="muted">まだ登録なし</li>`;
+  document.getElementById("buys-content").innerHTML = `
+    <button class="modal-close" id="buys-close">✕</button>
+    <h2>📸 買ったもの追加</h2>
+    <p class="buys-lead">入れると「🍳 作れる」に反映されるよ（${FRESH_DAYS}日で自動で消える）</p>
+    <div class="buy-input-row">
+      <input type="text" id="buy-input" placeholder="例：にんじん 豚こま きゅうり" autocomplete="off">
+      <button id="buy-add">追加</button>
+    </div>
+    <p class="buy-suggest-label">よく使う食材からサッと</p>
+    <div class="buy-suggests">${chips}</div>
+    <h3>いま登録中</h3>
+    <ul class="buy-list">${list}</ul>
+  `;
+  document.getElementById("buys-overlay").classList.add("open");
+  document.getElementById("buys-close").onclick = closeBuysModal;
+  const input = document.getElementById("buy-input");
+  document.getElementById("buy-add").onclick = () => addBuys(input.value);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") addBuys(input.value); });
+  document.querySelectorAll(".buy-suggest").forEach(b => b.onclick = () => addBuys(b.dataset.item));
+  document.querySelectorAll(".buy-remove").forEach(b => b.onclick = () => removeBuy(b.dataset.item));
+}
+function closeBuysModal() { document.getElementById("buys-overlay").classList.remove("open"); }
+function addBuys(text) {
+  const items = (text || "").split(/[\s,、，]+/).map(s => s.trim()).filter(Boolean);
+  if (!items.length) return;
+  const buys = loadBuys();
+  const today = new Date().toISOString().slice(0, 10);
+  items.forEach(it => { if (!buys.some(b => b.item === it)) buys.push({ item: it, date: today }); });
+  saveBuys(buys);
+  refreshBuys();
+  toast(`「${items.join("・")}」を追加。🍳作れるに反映したよ`);
+  openBuysModal(); // 一覧・候補を更新
+}
+function removeBuy(item) {
+  saveBuys(loadBuys().filter(b => b.item !== item));
+  refreshBuys();
+  openBuysModal();
+}
+
 function openModal(id) {
   const r = RECIPES.find(x => x.id === id);
   if (!r) return;
@@ -511,6 +569,11 @@ document.getElementById("reset-all").addEventListener("click", () => {
   renderTabs();
   renderChips();
   renderGrid();
+});
+
+document.getElementById("add-buys-btn").addEventListener("click", openBuysModal);
+document.getElementById("buys-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "buys-overlay") closeBuysModal();
 });
 
 init();
