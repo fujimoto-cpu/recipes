@@ -179,10 +179,10 @@ function renderCart() {
   }
 }
 
-document.getElementById("cart-button").addEventListener("click", () => {
+function openCart() {
   renderCart();
   document.getElementById("cart-overlay").classList.add("open");
-});
+}
 document.getElementById("cart-overlay").addEventListener("click", (e) => {
   if (e.target.id === "cart-overlay") e.currentTarget.classList.remove("open");
 });
@@ -231,7 +231,9 @@ function renderPantryBar() {
   el.innerHTML = html;
 }
 
-// ---------- タブ（すべて / 作りたい / マイ定番） ----------
+// ---------- タブ（すべて / 作れる / 作りたい / マイ定番） ----------
+const TAB_TITLES = { all: "すべてのレシピ", cookable: "今日つくれる", want: "作りたいレシピ", staple: "マイ定番" };
+
 function renderTabs() {
   const wantN = RECIPES.filter(r => want.has(r.id)).length;
   const stapleN = RECIPES.filter(r => isStaple(r.id)).length;
@@ -243,6 +245,8 @@ function renderTabs() {
     if (v === "staple") tab.innerHTML = `⭐ マイ定番 <span class="tab-n">${stapleN}</span>`;
     if (v === "cookable") tab.innerHTML = `🍳 作れる <span class="tab-n">${cookableN}</span>`;
   });
+  const secTitle = document.getElementById("sec-title");
+  if (secTitle) secTitle.textContent = TAB_TITLES[currentView] || "レシピ";
 }
 
 let chipsExpanded = false;
@@ -308,34 +312,18 @@ function matches(r) {
 
 function mediaThumbHtml(r) {
   const m = r.media;
-  if (m.type === "video") return `<video src="${m.file}#t=0.1" muted playsinline preload="metadata" webkit-playsinline></video><span class="play-badge">▶</span>`;
+  if (m.type === "video") return `<video src="${m.file}#t=0.1" muted playsinline preload="metadata" webkit-playsinline></video>`;
   if (m.type === "image") return `<img src="${m.file}" alt="${r.title}">`;
-  if (m.type === "youtube") return `<img src="${m.thumb}" alt="${r.title}"><span class="play-badge">▶</span>`;
+  if (m.type === "youtube") return `<img src="${m.thumb}" alt="${r.title}">`;
   return "";
 }
+const hasPlayBadge = (r) => r.media.type === "video" || r.media.type === "youtube";
 
-function kcalLevel(kcal) {
-  if (kcal < 200) return "low";
-  if (kcal < 400) return "mid";
-  return "high";
-}
-
-function kcalBadgeHtml(r) {
+function kcalChipHtml(r) {
   if (r.nutrition && r.nutrition.calories_kcal != null) {
-    const kcal = r.nutrition.calories_kcal;
-    return `<span class="kcal-badge ${kcalLevel(kcal)}">🔥 ${kcal}kcal</span>`;
+    return `<span class="kcal-chip">🔥 ${r.nutrition.calories_kcal}kcal</span>`;
   }
-  return `<span class="kcal-badge unknown">kcal不明</span>`;
-}
-
-function cardActionsHtml(r) {
-  const wanted = want.has(r.id);
-  const c = cookedCount(r.id);
-  return `
-    <div class="card-actions">
-      <button class="act-want ${wanted ? "on" : ""}" data-act="want" data-id="${r.id}" title="作りたい">${wanted ? "♥" : "♡"}</button>
-      <button class="act-cook ${c > 0 ? "on" : ""}" data-act="cook" data-id="${r.id}" title="作った">✓ 作った${c > 0 ? ` <b>${c}</b>` : ""}</button>
-    </div>`;
+  return "";
 }
 
 function cookableTagHtml(r) {
@@ -371,21 +359,26 @@ function renderGrid() {
     return;
   }
 
-  grid.innerHTML = list.map(r => `
+  grid.innerHTML = list.map(r => {
+    const wanted = want.has(r.id);
+    const c = cookedCount(r.id);
+    return `
     <div class="card" data-id="${r.id}">
       <div class="card-media">
         ${mediaThumbHtml(r)}
-        ${isStaple(r.id) ? `<span class="staple-badge">⭐ 定番</span>` : ""}
+        <button class="badge heart ${wanted ? "on" : ""}" data-act="want" data-id="${r.id}" title="作りたい">${wanted ? "♥" : "♡"}</button>
+        ${hasPlayBadge(r) ? `<span class="badge play">▶</span>` : ""}
+        ${isStaple(r.id) ? `<span class="badge staple">⭐</span>` : ""}
+        ${kcalChipHtml(r)}
       </div>
       <div class="card-body">
         <p class="card-title">${r.title}</p>
-        ${kcalBadgeHtml(r)}
         ${currentView === "cookable" ? cookableTagHtml(r) : ""}
-        <p class="card-ingredients">${r.ingredients.slice(0, 4).join(" / ")}</p>
-        ${cardActionsHtml(r)}
+        <p class="card-ingredients">${r.ingredients.slice(0, 3).join(" / ")}</p>
+        <button class="cook-btn ${c > 0 ? "on" : ""}" data-act="cook" data-id="${r.id}">✓ 作った${c > 0 ? ` <b>${c}</b>` : ""}</button>
       </div>
     </div>
-  `).join("");
+  `; }).join("");
 
   grid.querySelectorAll(".card").forEach(card => {
     card.querySelector(".card-media").onclick = () => openModal(card.dataset.id);
@@ -630,6 +623,45 @@ document.getElementById("reset-all").addEventListener("click", () => {
 document.getElementById("add-buys-btn").addEventListener("click", openBuysModal);
 document.getElementById("buys-overlay").addEventListener("click", (e) => {
   if (e.target.id === "buys-overlay") closeBuysModal();
+});
+
+// ---------- 🎛 食材・在庫の絞り込みパネル（折りたたみ・ヘッダー圧縮の核） ----------
+const filterToggle = document.getElementById("filter-toggle");
+const filterPanel = document.getElementById("filter-panel");
+filterToggle.addEventListener("click", () => {
+  const open = filterPanel.classList.toggle("open");
+  filterToggle.classList.toggle("open", open);
+});
+
+// ---------- 👋 あいさつ（時間帯で変わる） ----------
+(function greet() {
+  const h = new Date().getHours();
+  const label = h < 5 ? "こんばんは" : h < 11 ? "おはよう" : h < 17 ? "こんにちは" : "こんばんは";
+  const emoji = h < 5 || h >= 17 ? "🌙" : "☀️";
+  document.getElementById("hello").textContent = `${label}、ゆりこ ${emoji}`;
+})();
+
+// ---------- 下タブバー（ホーム/さがす/📷/買い物/マイ） ----------
+document.querySelectorAll(".navtab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".navtab").forEach(b => b.classList.remove("on"));
+    btn.classList.add("on");
+    const nav = btn.dataset.nav;
+    if (nav === "home") {
+      document.querySelector('.tab[data-view="all"]').click();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (nav === "search") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      document.getElementById("search").focus();
+    } else if (nav === "photo") {
+      openBuysModal();
+    } else if (nav === "cart") {
+      openCart();
+    } else if (nav === "mine") {
+      document.querySelector('.tab[data-view="want"]').click();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
 });
 
 init();

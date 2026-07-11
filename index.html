@@ -4,46 +4,49 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>レシピ図書館</title>
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
-<header class="topbar">
-  <div class="topbar-row">
-    <div>
-      <h1>🍳 レシピ図書館</h1>
-      <p class="subtitle">保存したレシピを画像・動画つきで一覧。食材から逆引き＆カロリー順で探せる。</p>
+<div class="app">
+  <header class="top">
+    <div class="hello" id="hello">こんにちは</div>
+    <h1 class="htitle">今日は何つくる？</h1>
+    <div class="search">
+      <span class="mg">🔍</span>
+      <input type="text" id="search" placeholder="レシピ・食材でさがす" />
     </div>
-    <button id="cart-button">🛒 買い物リスト <span id="cart-count">0</span></button>
-  </div>
-</header>
+  </header>
 
-<main>
   <section class="tabs" id="tabs">
-    <button class="tab active" data-view="all">🍽 すべて</button>
+    <button class="tab active" data-view="all">すべて</button>
+    <button class="tab" data-view="cookable">🍳 作れる <span class="tab-n">0</span></button>
     <button class="tab" data-view="want">♡ 作りたい <span class="tab-n">0</span></button>
     <button class="tab" data-view="staple">⭐ マイ定番 <span class="tab-n">0</span></button>
-    <button class="tab" data-view="cookable">🍳 作れる <span class="tab-n">0</span></button>
   </section>
 
-  <section class="pantry-bar" id="pantry-bar"></section>
-  <div class="pantry-actions">
-    <button id="add-buys-btn" class="add-buys-btn">📸 買ったもの追加</button>
-  </div>
-
-  <section class="controls">
-    <input type="text" id="search" placeholder="料理名・食材・タグで検索" />
-    <div class="control-buttons">
+  <button class="filter-toggle" id="filter-toggle">🎛 食材・在庫で絞り込む <span class="chev">▾</span></button>
+  <div class="filter-panel" id="filter-panel">
+    <section class="pantry-bar" id="pantry-bar"></section>
+    <div class="pantry-actions">
+      <button id="add-buys-btn" class="add-buys-btn">📸 買ったもの追加</button>
+    </div>
+    <div class="controls">
       <button id="sort-kcal">🔥 低カロリー順</button>
       <button id="reset-all">↺ すべて表示</button>
     </div>
-  </section>
+    <section class="chips" id="chips"></section>
+  </div>
 
-  <section class="chips" id="chips"></section>
-
-  <p class="match-count" id="match-count"></p>
+  <div class="sec">
+    <h2 id="sec-title">すべてのレシピ</h2>
+    <span class="more" id="match-count"></span>
+  </div>
 
   <section class="grid" id="grid"></section>
-</main>
+</div>
 
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal" id="modal-content"></div>
@@ -57,6 +60,14 @@
   <div class="modal" id="buys-content"></div>
 </div>
 
-<script src="app.js?v=3"></script>
+<nav class="tabbar">
+  <button class="navtab on" data-nav="home"><span class="i">⌂</span>ホーム</button>
+  <button class="navtab" data-nav="search"><span class="i">🔍</span>さがす</button>
+  <button class="navtab fab" data-nav="photo"><span class="i">📷</span></button>
+  <button class="navtab" data-nav="cart"><span class="i">🛒</span>買い物<span class="navbadge" id="cart-count">0</span></button>
+  <button class="navtab" data-nav="mine"><span class="i">♡</span>マイ</button>
+</nav>
+
+<script src="app.js?v=4"></script>
 </body>
 </html>
