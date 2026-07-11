@@ -146,6 +146,7 @@ main { max-width: 900px; margin: 0 auto; padding: 8px 20px 40px; }
 .modal-close { float: right; border: none; background: #f4f1ec; width: 32px; height: 32px; border-radius: 50%; font-size: 15px; cursor: pointer; color: #999; }
 .modal-media { width: 100%; border-radius: 16px; overflow: hidden; margin-bottom: 14px; background: var(--pink-soft); }
 .modal-media img, .modal-media video { width: 100%; display: block; }
+.modal-media iframe { width: 100%; aspect-ratio: 16 / 9; display: block; border: 0; }
 .modal h2 { font-size: 19px; margin: 0 0 8px; }
 .modal h3 { font-size: 14px; margin: 18px 0 6px; color: #8a7f76; }
 .modal ul, .modal ol { margin: 0; padding-left: 20px; font-size: 14px; }

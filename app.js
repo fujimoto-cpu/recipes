@@ -308,7 +308,7 @@ function matches(r) {
 
 function mediaThumbHtml(r) {
   const m = r.media;
-  if (m.type === "video") return `<video src="${m.file}" muted preload="metadata"></video><span class="play-badge">▶</span>`;
+  if (m.type === "video") return `<video src="${m.file}#t=0.1" muted playsinline preload="metadata" webkit-playsinline></video><span class="play-badge">▶</span>`;
   if (m.type === "image") return `<img src="${m.file}" alt="${r.title}">`;
   if (m.type === "youtube") return `<img src="${m.thumb}" alt="${r.title}"><span class="play-badge">▶</span>`;
   return "";
@@ -527,9 +527,9 @@ function openModal(id) {
   if (!r) return;
 
   let mediaHtml = "";
-  if (r.media.type === "video") mediaHtml = `<video src="${r.media.file}" controls></video>`;
+  if (r.media.type === "video") mediaHtml = `<video src="${r.media.file}#t=0.1" controls muted playsinline webkit-playsinline preload="metadata"></video>`;
   else if (r.media.type === "image") mediaHtml = `<img src="${r.media.file}" alt="${r.title}">`;
-  else if (r.media.type === "youtube") mediaHtml = `<img src="${r.media.thumb}" alt="${r.title}">`;
+  else if (r.media.type === "youtube") mediaHtml = `<iframe src="https://www.youtube.com/embed/${r.media.youtube_id}" title="${r.title}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
 
   let nutritionHtml = "";
   if (r.nutrition && r.nutrition.calories_kcal != null) {
