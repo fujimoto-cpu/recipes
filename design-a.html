@@ -1,0 +1,93 @@
+<meta charset="utf-8">
+<title>レシピ図書館 リデザイン案A</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --paper:#f6f3 ee; --paper:#f6f3ee; --card:#fffdfa; --ink:#26221b; --muted:#938a7c;
+    --line:#e8e1d6; --accent:#3f5a41; --accent-soft:#eef1e9; --gold:#b98a3e;
+    --serif:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP",serif;
+    --sans:"Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --paper:#16140f; --card:#201d16; --ink:#efe9dd; --muted:#a99f8f; --line:#332e25; --accent:#a8c49a; --accent-soft:#242a20; --gold:#d8b06a; }
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{background:var(--paper); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased}
+  .phone{max-width:400px; margin:0 auto; min-height:100vh; background:var(--paper)}
+
+  /* --- slim header --- */
+  header{position:sticky; top:0; z-index:5; background:color-mix(in srgb,var(--paper) 88%, transparent); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); padding:14px 18px 12px}
+  .brandrow{display:flex; align-items:baseline; justify-content:space-between}
+  .brand{font-family:var(--serif); font-size:21px; letter-spacing:.04em; font-weight:600}
+  .brand .en{display:block; font-family:var(--sans); font-size:9.5px; letter-spacing:.34em; color:var(--muted); text-transform:uppercase; margin-top:2px}
+  .icons{display:flex; gap:6px}
+  .iconbtn{width:38px; height:38px; border:1px solid var(--line); background:var(--card); border-radius:11px; font-size:16px; display:grid; place-items:center; cursor:pointer; color:var(--ink)}
+  .seg{display:flex; gap:20px; margin-top:14px}
+  .seg span{font-size:13.5px; color:var(--muted); font-weight:700; padding-bottom:7px; position:relative; cursor:pointer}
+  .seg span.on{color:var(--ink)}
+  .seg span.on::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--accent); border-radius:2px}
+  .seg .n{font-size:11px; color:var(--accent); font-weight:800; margin-left:3px; font-variant-numeric:tabular-nums}
+
+  /* --- feed --- */
+  .feed{padding:16px 16px 40px; display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .lead{grid-column:1/-1}
+  .card{background:var(--card); border-radius:16px; overflow:hidden; border:1px solid var(--line)}
+  .thumb{position:relative; width:100%; aspect-ratio:1/1; overflow:hidden; background:var(--accent-soft)}
+  .lead .thumb{aspect-ratio:16/10}
+  .thumb img, .thumb video{width:100%; height:100%; object-fit:cover; display:block}
+  .vbadge{position:absolute; top:9px; right:9px; width:26px; height:26px; border-radius:50%; background:rgba(20,18,14,.55); color:#fff; display:grid; place-items:center; font-size:11px; backdrop-filter:blur(3px)}
+  .kcal{position:absolute; left:9px; bottom:9px; background:rgba(255,253,250,.92); color:var(--accent); font-size:11px; font-weight:800; padding:3px 9px; border-radius:999px; font-variant-numeric:tabular-nums}
+  .meta{padding:11px 12px 13px}
+  .title{font-family:var(--serif); font-size:15px; line-height:1.4; font-weight:600; letter-spacing:.01em}
+  .lead .title{font-size:20px}
+  .ing{margin-top:5px; font-size:11px; color:var(--muted); line-height:1.5}
+  .eyebrow{grid-column:1/-1; display:flex; align-items:center; gap:9px; margin:6px 2px -2px}
+  .eyebrow b{font-family:var(--serif); font-size:14px; font-weight:600}
+  .eyebrow .rule{flex:1; height:1px; background:var(--line)}
+  .eyebrow .tag{font-size:10px; letter-spacing:.2em; color:var(--muted); text-transform:uppercase}
+</style>
+<div class="phone">
+  <header>
+    <div class="brandrow">
+      <div class="brand">だいどころ<span class="en">Recipe Library</span></div>
+      <div class="icons"><button class="iconbtn">⌕</button><button class="iconbtn">☰</button></div>
+    </div>
+    <div class="seg"><span class="on">すべて</span><span>作りたい<span class="n">3</span></span><span>作れる<span class="n">14</span></span><span>定番</span></div>
+  </header>
+  <div class="feed">
+    <div class="eyebrow"><b>今日つくれる</b><span class="rule"></span><span class="tag">in your kitchen</span></div>
+
+    <div class="card lead">
+      <div class="thumb"><video src="assets/963c888658.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="vbadge">▶</span></div>
+      <div class="meta"><div class="title">ツナマヨにんじんサラダ</div><div class="ing">にんじん・ツナ缶・マヨネーズ</div></div>
+    </div>
+
+    <div class="card">
+      <div class="thumb"><video src="assets/ac52f3ff12.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="vbadge">▶</span><span class="kcal">13 kcal</span></div>
+      <div class="meta"><div class="title">ヘルシーわらび餅</div><div class="ing">水・ラカンカ・オオバコ</div></div>
+    </div>
+    <div class="card">
+      <div class="thumb"><video src="assets/89671a0588.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="vbadge">▶</span></div>
+      <div class="meta"><div class="title">豆乳キムチ春雨</div><div class="ing">春雨・豆乳・キムチ</div></div>
+    </div>
+
+    <div class="eyebrow"><b>保存したレシピ</b><span class="rule"></span><span class="tag">library</span></div>
+
+    <div class="card">
+      <div class="thumb"><img src="assets/3d305e1210.jpg"></div>
+      <div class="meta"><div class="title">タルティーヌ集</div><div class="ing">バゲット・クリームチーズ・いちじく</div></div>
+    </div>
+    <div class="card">
+      <div class="thumb"><img src="https://img.youtube.com/vi/lnsoGU2dSgg/hqdefault.jpg"><span class="vbadge">▶</span><span class="kcal">400 kcal</span></div>
+      <div class="meta"><div class="title">完全栄養冷凍ブリトー</div><div class="ing">薄力粉・片栗粉・オリーブオイル</div></div>
+    </div>
+    <div class="card">
+      <div class="thumb"><video src="assets/3a28ded828.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="vbadge">▶</span></div>
+      <div class="meta"><div class="title">ゆず大根</div><div class="ing">大根・大葉・めんつゆ</div></div>
+    </div>
+    <div class="card">
+      <div class="thumb"><video src="assets/7e3b6903cf.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="vbadge">▶</span></div>
+      <div class="meta"><div class="title">ちゅるん豆腐</div><div class="ing">豆乳・ゼラチン・塩</div></div>
+    </div>
+  </div>
+</div>
