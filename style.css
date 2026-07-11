@@ -214,6 +214,9 @@ main { max-width: 900px; margin: 0 auto; padding: 8px 20px 40px; }
   box-shadow: 0 1px 4px rgba(200,84,126,0.12);
 }
 .pantry-bar-hint { font-size: 11px; color: var(--muted); margin-left: auto; }
+.pantry-break { flex-basis: 100%; height: 0; }
+.pantry-bar-label.fresh { color: var(--green); }
+.pantry-pill.fresh { box-shadow: 0 1px 4px rgba(123,176,78,0.22); }
 @media (max-width: 520px) { .pantry-bar-hint { display: none; } }
 
 /* ---------- 🍳 作れる 判定バッジ ---------- */

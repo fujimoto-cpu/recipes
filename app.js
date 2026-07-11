@@ -4,6 +4,8 @@ let searchTerm = "";
 let sortedByKcal = false;
 let currentView = "all"; // all | want | staple
 let homeStock = [];      // 🏠 いま家にあるもの（pantry.json・CORIN管理／買い物リストからも自動除外）
+let freshStock = [];     // 🧾 最近買ったもの（recent-buys.json・レシートからCORINが追記／数日で自動フェード）
+const FRESH_DAYS = 6;    // 買ってから何日「手持ち」とみなすか（生鮮の消費想定）
 
 // ---------- storage ----------
 const CART_KEY = "recipe-site-cart";     // Map<ingredient, [recipe titles]>
@@ -47,7 +49,8 @@ const isPantry = (ing) => pantry.has(ing);
 // 「作れる」判定：レシピ材料のうち手持ち（常備品＋家の在庫＋買ったもの）に無いもの＝不足。
 const MAX_MISSING = 3; // 不足これ以下を「作れる」タブに出す
 const STOCK_ALIAS = { "お酢": ["酢"], "麺つゆ": ["めんつゆ"], "ポン酢": ["ぽん酢"] };
-const missingOf = (r) => r.ingredients.filter(i => !isPantry(i));
+const owns = (ing) => isPantry(ing) || freshStock.includes(ing); // 常備品・家の在庫・最近買ったもの
+const missingOf = (r) => r.ingredients.filter(i => !owns(i));
 
 // ---------- actions（本命：作りたい♡・作った✓） ----------
 function toggleWant(id) {
@@ -186,6 +189,17 @@ async function init() {
       homeStock.forEach(i => { pantry.add(i); (STOCK_ALIAS[i] || []).forEach(a => pantry.add(a)); });
     }
   } catch { /* pantry.json が無くても動く */ }
+  try {
+    const bres = await fetch("recent-buys.json");
+    if (bres.ok) {
+      const buys = await bres.json();
+      const now = Date.now();
+      // 買った日から FRESH_DAYS 以内のものだけ「手持ち」に。古い生鮮は自動で消える。
+      freshStock = buys
+        .filter(b => b && b.item && b.date && (now - new Date(b.date).getTime()) / 86400000 <= FRESH_DAYS)
+        .map(b => b.item);
+    }
+  } catch { /* recent-buys.json が無くても動く */ }
   updateCartCount();
   renderPantryBar();
   renderTabs();
@@ -197,11 +211,19 @@ async function init() {
 function renderPantryBar() {
   const el = document.getElementById("pantry-bar");
   if (!el) return;
-  if (!homeStock.length) { el.innerHTML = ""; return; }
-  el.innerHTML =
-    `<span class="pantry-bar-label">🏠 いま家にあるもの</span>` +
-    homeStock.map(i => `<span class="pantry-pill">${i}</span>`).join("") +
-    `<span class="pantry-bar-hint">増えた・なくなったらCORINに言ってね</span>`;
+  if (!homeStock.length && !freshStock.length) { el.innerHTML = ""; return; }
+  let html = "";
+  if (homeStock.length) {
+    html += `<span class="pantry-bar-label">🏠 いま家にあるもの</span>` +
+      homeStock.map(i => `<span class="pantry-pill">${i}</span>`).join("");
+  }
+  if (freshStock.length) {
+    html += `<span class="pantry-break"></span>` +
+      `<span class="pantry-bar-label fresh">🧾 最近買ったもの</span>` +
+      freshStock.map(i => `<span class="pantry-pill fresh">${i}</span>`).join("");
+  }
+  html += `<span class="pantry-bar-hint">レシート貼ってくれたら🧾に反映するよ</span>`;
+  el.innerHTML = html;
 }
 
 // ---------- タブ（すべて / 作りたい / マイ定番） ----------
