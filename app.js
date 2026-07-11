@@ -44,6 +44,11 @@ const cookedCount = (id) => cooked.get(id) || 0;
 const isStaple = (id) => cookedCount(id) >= STAPLE_THRESHOLD;
 const isPantry = (ing) => pantry.has(ing);
 
+// 「作れる」判定：レシピ材料のうち手持ち（常備品＋家の在庫＋買ったもの）に無いもの＝不足。
+const MAX_MISSING = 3; // 不足これ以下を「作れる」タブに出す
+const STOCK_ALIAS = { "お酢": ["酢"], "麺つゆ": ["めんつゆ"], "ポン酢": ["ぽん酢"] };
+const missingOf = (r) => r.ingredients.filter(i => !isPantry(i));
+
 // ---------- actions（本命：作りたい♡・作った✓） ----------
 function toggleWant(id) {
   if (want.has(id)) want.delete(id); else want.add(id);
@@ -176,7 +181,9 @@ async function init() {
     const pres = await fetch("pantry.json");
     if (pres.ok) {
       homeStock = await pres.json();
-      homeStock.forEach(i => pantry.add(i)); // 家にあるもの＝買い物リストから自動で外す
+      // 家にあるもの＝買い物リストから外す＋「作れる」判定の持ち物に加える。
+      // レシピ側の表記（酢・めんつゆ）に寄せた別名も入れて突き合わせ精度を上げる。
+      homeStock.forEach(i => { pantry.add(i); (STOCK_ALIAS[i] || []).forEach(a => pantry.add(a)); });
     }
   } catch { /* pantry.json が無くても動く */ }
   updateCartCount();
@@ -201,11 +208,13 @@ function renderPantryBar() {
 function renderTabs() {
   const wantN = RECIPES.filter(r => want.has(r.id)).length;
   const stapleN = RECIPES.filter(r => isStaple(r.id)).length;
+  const cookableN = RECIPES.filter(r => missingOf(r).length <= MAX_MISSING).length;
   document.querySelectorAll(".tab").forEach(tab => {
     const v = tab.dataset.view;
     tab.classList.toggle("active", v === currentView);
     if (v === "want") tab.innerHTML = `♡ 作りたい <span class="tab-n">${wantN}</span>`;
     if (v === "staple") tab.innerHTML = `⭐ マイ定番 <span class="tab-n">${stapleN}</span>`;
+    if (v === "cookable") tab.innerHTML = `🍳 作れる <span class="tab-n">${cookableN}</span>`;
   });
 }
 
@@ -257,6 +266,7 @@ function renderChips() {
 function matches(r) {
   if (currentView === "want" && !want.has(r.id)) return false;
   if (currentView === "staple" && !isStaple(r.id)) return false;
+  if (currentView === "cookable" && missingOf(r).length > MAX_MISSING) return false;
   if (activeIngredients.size > 0) {
     for (const ing of activeIngredients) {
       if (!r.ingredients.includes(ing)) return false;
@@ -301,11 +311,19 @@ function cardActionsHtml(r) {
     </div>`;
 }
 
+function cookableTagHtml(r) {
+  const miss = missingOf(r);
+  if (miss.length === 0) return `<p class="cookable-tag ok">✅ 今すぐ作れる</p>`;
+  return `<p class="cookable-tag near">🔸 あと${miss.length}品：${miss.join(" / ")}</p>`;
+}
+
 function renderGrid() {
   const grid = document.getElementById("grid");
   let list = RECIPES.filter(matches);
 
-  if (sortedByKcal) {
+  if (currentView === "cookable") {
+    list = list.slice().sort((a, b) => missingOf(a).length - missingOf(b).length);
+  } else if (sortedByKcal) {
     list = list.slice().sort((a, b) => {
       const ka = a.nutrition && a.nutrition.calories_kcal != null ? a.nutrition.calories_kcal : Infinity;
       const kb = b.nutrition && b.nutrition.calories_kcal != null ? b.nutrition.calories_kcal : Infinity;
@@ -320,6 +338,7 @@ function renderGrid() {
   if (list.length === 0) {
     const msg = currentView === "want" ? "「♡作りたい」がまだ無い。気になったレシピに♡を押してみて"
       : currentView === "staple" ? `まだ定番なし。同じレシピを${STAPLE_THRESHOLD}回「✓作った」すると、ここに殿堂入りするよ⭐`
+      : currentView === "cookable" ? "今の在庫だと「あと少しで作れる」レシピがまだ無いみたい。🧾レシートをCORINに送ると、買った食材で作れるレシピがここに出るよ"
       : "条件に合うレシピが見つからなかった";
     grid.innerHTML = `<div class="empty-state">${msg}</div>`;
     return;
@@ -334,6 +353,7 @@ function renderGrid() {
       <div class="card-body">
         <p class="card-title">${r.title}</p>
         ${kcalBadgeHtml(r)}
+        ${currentView === "cookable" ? cookableTagHtml(r) : ""}
         <p class="card-ingredients">${r.ingredients.slice(0, 4).join(" / ")}</p>
         ${cardActionsHtml(r)}
       </div>

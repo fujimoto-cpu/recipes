@@ -215,3 +215,8 @@ main { max-width: 900px; margin: 0 auto; padding: 8px 20px 40px; }
 }
 .pantry-bar-hint { font-size: 11px; color: var(--muted); margin-left: auto; }
 @media (max-width: 520px) { .pantry-bar-hint { display: none; } }
+
+/* ---------- 🍳 作れる 判定バッジ ---------- */
+.cookable-tag { margin: 4px 0 0; font-size: 12px; font-weight: 700; line-height: 1.4; }
+.cookable-tag.ok { color: var(--green); }
+.cookable-tag.near { color: var(--pink-deep); }
