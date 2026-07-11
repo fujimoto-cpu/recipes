@@ -198,3 +198,20 @@ main { max-width: 900px; margin: 0 auto; padding: 8px 20px 40px; }
   box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- 🏠 いま家にあるもの ---------- */
+.pantry-bar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 18px; padding: 12px 16px;
+  background: linear-gradient(135deg, var(--pink-soft) 0%, var(--green-soft) 100%);
+  border: 1.5px dashed #f2c9d8; border-radius: 16px;
+}
+.pantry-bar:empty { display: none; }
+.pantry-bar-label { font-size: 13px; font-weight: 800; color: var(--pink-deep); margin-right: 2px; }
+.pantry-pill {
+  padding: 5px 13px; background: #fff; border-radius: 999px;
+  font-size: 13px; font-weight: 700; color: var(--ink);
+  box-shadow: 0 1px 4px rgba(200,84,126,0.12);
+}
+.pantry-bar-hint { font-size: 11px; color: var(--muted); margin-left: auto; }
+@media (max-width: 520px) { .pantry-bar-hint { display: none; } }

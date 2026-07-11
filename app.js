@@ -3,6 +3,7 @@ let activeIngredients = new Set();
 let searchTerm = "";
 let sortedByKcal = false;
 let currentView = "all"; // all | want | staple
+let homeStock = [];      // 🏠 いま家にあるもの（pantry.json・CORIN管理／買い物リストからも自動除外）
 
 // ---------- storage ----------
 const CART_KEY = "recipe-site-cart";     // Map<ingredient, [recipe titles]>
@@ -171,10 +172,29 @@ document.getElementById("cart-overlay").addEventListener("click", (e) => {
 async function init() {
   const res = await fetch("data.json");
   RECIPES = await res.json();
+  try {
+    const pres = await fetch("pantry.json");
+    if (pres.ok) {
+      homeStock = await pres.json();
+      homeStock.forEach(i => pantry.add(i)); // 家にあるもの＝買い物リストから自動で外す
+    }
+  } catch { /* pantry.json が無くても動く */ }
   updateCartCount();
+  renderPantryBar();
   renderTabs();
   renderChips();
   renderGrid();
+}
+
+// ---------- 🏠 いま家にあるもの ----------
+function renderPantryBar() {
+  const el = document.getElementById("pantry-bar");
+  if (!el) return;
+  if (!homeStock.length) { el.innerHTML = ""; return; }
+  el.innerHTML =
+    `<span class="pantry-bar-label">🏠 いま家にあるもの</span>` +
+    homeStock.map(i => `<span class="pantry-pill">${i}</span>`).join("") +
+    `<span class="pantry-bar-hint">増えた・なくなったらCORINに言ってね</span>`;
 }
 
 // ---------- タブ（すべて / 作りたい / マイ定番） ----------
