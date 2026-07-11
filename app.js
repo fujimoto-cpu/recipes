@@ -6,6 +6,7 @@ let currentView = "all"; // all | want | staple
 let homeStock = [];      // 🏠 いま家にあるもの（pantry.json・CORIN管理／買い物リストからも自動除外）
 let freshStock = [];     // 🧾 最近買ったもの（下記2ソースを合成／数日で自動フェード）
 const FRESH_DAYS = 6;    // 買ってから何日「手持ち」とみなすか（生鮮の消費想定）
+const PHOTO_API = "https://script.google.com/macros/s/AKfycbx8BJK1csnnJYAR3oaxIIohZ97FKtShRJhusPhpu5qdz0n15_rs_IThPlWiJn5I2dWU/exec"; // レシート写真→食材抽出（Apps Script + Gemini無料枠・自己修復型）
 let jsonBuys = [];       // recent-buys.json（CORINがレシートから追記）
 const BUYS_KEY = "recipe-site-buys"; // 📸 サイトで手動追加した買ったもの（携帯・localStorage）
 const loadBuys = () => { try { return JSON.parse(localStorage.getItem(BUYS_KEY)) || []; } catch { return []; } };
@@ -415,6 +416,55 @@ function handleAction(act, id) {
 // ---------- 📸 買ったもの追加（携帯・サーバー不要・localStorage） ----------
 function refreshBuys() { computeFresh(); renderPantryBar(); renderTabs(); renderGrid(); }
 
+// 画像を縮小してbase64化（通信・無料枠の節約）
+function fileToResizedBase64(file, maxDim) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let w = img.width, h = img.height;
+      const s = Math.min(1, maxDim / Math.max(w, h));
+      w = Math.round(w * s); h = Math.round(h * s);
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+      cv.getContext("2d").drawImage(img, 0, 0, w, h);
+      resolve(cv.toDataURL("image/jpeg", 0.85).split(",")[1]);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+// 📷 写真を送ってAIに食材を読ませ、「最近買ったもの」に自動追加
+async function handlePhoto(file) {
+  if (!file) return;
+  const setStatus = (t) => { const el = document.getElementById("buy-photo-status"); if (el) el.textContent = t; };
+  setStatus("🖼 画像を準備中…");
+  try {
+    const b64 = await fileToResizedBase64(file, 1000);
+    setStatus("🔎 AIが読み取り中…（数秒待ってね）");
+    const res = await fetch(PHOTO_API, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ image: b64, mimeType: "image/jpeg" })
+    });
+    const data = await res.json();
+    if (data && data.error) { setStatus("⚠ エラー：" + data.error); return; }
+    const items = (data && data.items) || [];
+    if (!items.length) { setStatus("食材が読み取れなかった…もう一度撮るか、下で手入力してね"); return; }
+    const buys = loadBuys();
+    const today = new Date().toISOString().slice(0, 10);
+    items.forEach(it => { if (!buys.some(b => b.item === it)) buys.push({ item: it, date: today }); });
+    saveBuys(buys);
+    refreshBuys();
+    toast(`写真から${items.length}品読み取った📸`);
+    openBuysModal();
+    setStatus(`✓ ${items.join(" / ")} を追加（違うのは「使った✓」で消せるよ）`);
+  } catch (e) {
+    setStatus("⚠ 通信エラー。電波のいい所でもう一度試してね");
+  }
+}
+
 function openBuysModal() {
   const counts = ingredientCounts();
   const suggestions = [...counts.entries()]
@@ -431,6 +481,10 @@ function openBuysModal() {
     <button class="modal-close" id="buys-close">✕</button>
     <h2>📸 買ったもの追加</h2>
     <p class="buys-lead">入れると「🍳 作れる」に反映されるよ（${FRESH_DAYS}日で自動で消える）</p>
+    <button id="buy-photo-btn" class="buy-photo-btn">📷 レシート・写真から読み取る</button>
+    <input type="file" id="buy-photo" accept="image/*" hidden>
+    <p id="buy-photo-status" class="buy-photo-status"></p>
+    <p class="buy-or">または手入力で</p>
     <div class="buy-input-row">
       <input type="text" id="buy-input" placeholder="例：にんじん 豚こま きゅうり" autocomplete="off">
       <button id="buy-add">追加</button>
@@ -442,6 +496,8 @@ function openBuysModal() {
   `;
   document.getElementById("buys-overlay").classList.add("open");
   document.getElementById("buys-close").onclick = closeBuysModal;
+  document.getElementById("buy-photo-btn").onclick = () => document.getElementById("buy-photo").click();
+  document.getElementById("buy-photo").onchange = (ev) => handlePhoto(ev.target.files[0]);
   const input = document.getElementById("buy-input");
   document.getElementById("buy-add").onclick = () => addBuys(input.value);
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") addBuys(input.value); });
