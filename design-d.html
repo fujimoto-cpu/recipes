@@ -1,55 +1,63 @@
 <meta charset="utf-8">
-<title>レシピ図書館 案D 今っぽい</title>
+<title>レシピ図書館 案D 今っぽい ver2</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#f6f7f4; --card:#ffffff; --ink:#18201b; --muted:#9aa09a; --line:#eceeea;
-    --accent:#12b981; --accent-ink:#0c8f66; --accent-soft:#e3f7ef;
-    --sans:"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
-    --shadow:0 8px 24px rgba(30,50,40,.08);
+    --bg:#f5f3ef; --card:#ffffff; --ink:#1d1b16; --sub:#6f6a60; --muted:#a8a297; --line:#ecebe5;
+    --accent:#1f9a6d; --accent-ink:#147a55; --accent-soft:#e9f4ee;
+    --jp:"Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;
+    --en:"Outfit","Zen Kaku Gothic New",system-ui,sans-serif;
+    --sh:0 10px 30px rgba(35,45,35,.07);
   }
   *{box-sizing:border-box; margin:0; padding:0}
-  body{background:var(--bg); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased}
-  .phone{max-width:400px; margin:0 auto; min-height:100vh; position:relative; padding-bottom:96px;
-    background:radial-gradient(120% 60% at 100% 0%, var(--accent-soft) 0%, transparent 55%), var(--bg)}
+  body{background:var(--bg); color:var(--ink); font-family:var(--jp); -webkit-font-smoothing:antialiased; letter-spacing:.01em}
+  .phone{max-width:400px; margin:0 auto; min-height:100vh; position:relative; padding-bottom:104px;
+    background:linear-gradient(180deg,#fbfaf7 0%, var(--bg) 240px)}
 
-  .top{padding:22px 20px 6px}
-  .hello{font-size:13px; color:var(--muted); font-weight:700}
-  .htitle{font-size:26px; font-weight:800; letter-spacing:-.02em; margin-top:2px; line-height:1.2}
+  .top{padding:24px 22px 4px}
+  .hello{font-size:12.5px; color:var(--muted); font-weight:700; letter-spacing:.06em}
+  .htitle{font-size:28px; font-weight:900; letter-spacing:-.01em; margin-top:4px; line-height:1.18}
   .htitle .em{color:var(--accent-ink)}
-  .search{margin:16px 0 4px; display:flex; align-items:center; gap:10px; background:var(--card); border-radius:16px; padding:14px 16px; box-shadow:var(--shadow)}
+  .search{margin:18px 0 2px; display:flex; align-items:center; gap:11px; background:var(--card); border:1px solid var(--line); border-radius:18px; padding:15px 17px; box-shadow:var(--sh)}
   .search input{border:none; outline:none; flex:1; font-size:14px; background:transparent; font-family:inherit; color:var(--ink)}
-  .search .mg{font-size:16px; color:var(--muted)}
+  .search input::placeholder{color:var(--muted)}
+  .search .mg{font-size:17px; color:var(--accent-ink)}
 
-  .chips{display:flex; gap:9px; overflow-x:auto; padding:14px 20px 6px; scrollbar-width:none}
+  .chips{display:flex; gap:9px; overflow-x:auto; padding:16px 22px 4px; scrollbar-width:none}
   .chips::-webkit-scrollbar{display:none}
-  .chip{white-space:nowrap; font-size:13px; font-weight:800; padding:9px 15px; border-radius:999px; background:var(--card); color:var(--ink); box-shadow:var(--shadow); cursor:pointer}
-  .chip.on{background:var(--accent); color:#fff; box-shadow:0 6px 16px rgba(18,185,129,.35)}
+  .chip{white-space:nowrap; font-size:13px; font-weight:700; padding:10px 16px; border-radius:999px; background:var(--card); border:1px solid var(--line); color:var(--sub); cursor:pointer}
+  .chip.on{background:var(--accent); border-color:var(--accent); color:#fff; box-shadow:0 8px 18px rgba(31,154,109,.32)}
 
-  .sec{display:flex; align-items:baseline; justify-content:space-between; padding:16px 20px 2px}
-  .sec h2{font-size:19px; font-weight:800; letter-spacing:-.01em}
-  .sec .more{font-size:12.5px; font-weight:800; color:var(--accent-ink)}
+  .sec{display:flex; align-items:center; justify-content:space-between; padding:20px 22px 4px}
+  .sec h2{font-size:20px; font-weight:900; letter-spacing:-.01em}
+  .sec .more{font-size:12.5px; font-weight:700; color:var(--accent-ink); font-family:var(--en)}
 
-  .feed{padding:12px 16px 8px; display:grid; grid-template-columns:1fr 1fr; gap:14px}
-  .card{background:var(--card); border-radius:22px; overflow:hidden; box-shadow:var(--shadow); cursor:pointer}
-  .thumb{position:relative; width:100%; aspect-ratio:1/1; overflow:hidden; background:var(--accent-soft)}
+  .feed{padding:12px 16px 4px; display:grid; grid-template-columns:1fr 1fr; gap:15px}
+  .card{background:var(--card); border-radius:22px; overflow:hidden; box-shadow:var(--sh); cursor:pointer; transition:transform .15s ease}
+  .card:active{transform:scale(.98)}
+  .thumb{position:relative; width:100%; aspect-ratio:4/5; overflow:hidden; background:var(--accent-soft)}
   .thumb img, .thumb video{width:100%; height:100%; object-fit:cover; display:block}
-  .vbadge{position:absolute; top:10px; right:10px; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,.82); backdrop-filter:blur(6px); color:var(--ink); display:grid; place-items:center; font-size:11px}
-  .heart{position:absolute; top:10px; left:10px; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,.82); backdrop-filter:blur(6px); display:grid; place-items:center; font-size:14px; color:#ff5d7a}
-  .kcal{position:absolute; left:10px; bottom:10px; background:rgba(24,32,27,.72); backdrop-filter:blur(6px); color:#fff; font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px; font-variant-numeric:tabular-nums}
-  .meta{padding:11px 13px 14px}
-  .title{font-size:14px; line-height:1.38; font-weight:800; letter-spacing:-.005em}
-  .ing{margin-top:5px; font-size:11px; color:var(--muted); line-height:1.45}
+  .badge{position:absolute; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.78); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); display:grid; place-items:center; font-size:12px; box-shadow:0 2px 8px rgba(0,0,0,.08)}
+  .heart{top:10px; left:10px; color:#ff5d7a}
+  .play{top:10px; right:10px; color:var(--ink)}
+  .kcal{position:absolute; left:10px; bottom:10px; background:rgba(29,27,22,.66); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#fff; font-size:11px; font-weight:700; padding:4px 11px; border-radius:999px; font-variant-numeric:tabular-nums; font-family:var(--en)}
+  .meta{padding:12px 14px 15px}
+  .title{font-size:14px; line-height:1.4; font-weight:700}
+  .ing{margin-top:6px; font-size:11px; color:var(--muted); line-height:1.5}
 
-  /* bottom floating glass tab bar */
-  .tabbar{position:fixed; left:50%; transform:translateX(-50%); bottom:16px; width:min(360px,92%); z-index:20;
-    display:flex; justify-content:space-around; align-items:center; padding:11px 8px;
-    background:rgba(255,255,255,.72); backdrop-filter:blur(18px) saturate(1.4); -webkit-backdrop-filter:blur(18px) saturate(1.4);
-    border:1px solid rgba(255,255,255,.7); border-radius:24px; box-shadow:0 12px 34px rgba(20,40,30,.16)}
-  .tab{display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; font-weight:800; color:var(--muted); cursor:pointer}
+  .tabbar{position:fixed; left:50%; transform:translateX(-50%); bottom:18px; width:min(356px,90%); z-index:20;
+    display:flex; justify-content:space-around; align-items:center; padding:12px 10px;
+    background:rgba(255,255,255,.7); backdrop-filter:blur(22px) saturate(1.5); -webkit-backdrop-filter:blur(22px) saturate(1.5);
+    border:1px solid rgba(255,255,255,.75); border-radius:26px; box-shadow:0 14px 40px rgba(20,40,30,.18)}
+  .tab{display:flex; flex-direction:column; align-items:center; gap:4px; font-size:10px; font-weight:700; color:var(--muted); cursor:pointer}
   .tab .i{font-size:19px; line-height:1}
   .tab.on{color:var(--accent-ink)}
-  .tab.fab .i{width:44px; height:44px; margin-top:-24px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; font-size:22px; box-shadow:0 8px 20px rgba(18,185,129,.45)}
+  .tab.fab{margin-top:0}
+  .tab.fab .i{width:52px; height:52px; margin-top:-28px; border-radius:20px; background:var(--accent); color:#fff; display:grid; place-items:center; font-size:23px; box-shadow:0 10px 24px rgba(31,154,109,.5)}
+  .tab.fab span:last-child{color:var(--accent-ink)}
 </style>
 <div class="phone">
   <div class="top">
@@ -67,16 +75,16 @@
 
   <div class="sec"><h2>今日つくれる</h2><span class="more">すべて →</span></div>
   <div class="feed">
-    <div class="card"><div class="thumb"><video src="assets/963c888658.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="heart">♡</span><span class="vbadge">▶</span></div><div class="meta"><div class="title">ツナマヨにんじんサラダ</div><div class="ing">にんじん・ツナ缶・マヨネーズ</div></div></div>
-    <div class="card"><div class="thumb"><video src="assets/ac52f3ff12.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="heart">♡</span><span class="vbadge">▶</span><span class="kcal">13 kcal</span></div><div class="meta"><div class="title">ヘルシーわらび餅</div><div class="ing">水・ラカンカ・オオバコ</div></div></div>
-    <div class="card"><div class="thumb"><video src="assets/89671a0588.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="heart">♡</span><span class="vbadge">▶</span></div><div class="meta"><div class="title">豆乳キムチ春雨</div><div class="ing">春雨・豆乳・キムチ</div></div></div>
-    <div class="card"><div class="thumb"><video src="assets/3a28ded828.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="heart">♡</span><span class="vbadge">▶</span></div><div class="meta"><div class="title">ゆず大根</div><div class="ing">大根・大葉・めんつゆ</div></div></div>
+    <div class="card"><div class="thumb"><video src="assets/963c888658.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="badge heart">♡</span><span class="badge play">▶</span></div><div class="meta"><div class="title">ツナマヨにんじんサラダ</div><div class="ing">にんじん・ツナ缶・マヨネーズ</div></div></div>
+    <div class="card"><div class="thumb"><video src="assets/ac52f3ff12.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="badge heart">♡</span><span class="badge play">▶</span><span class="kcal">13 kcal</span></div><div class="meta"><div class="title">ヘルシーわらび餅</div><div class="ing">水・ラカンカ・オオバコ</div></div></div>
+    <div class="card"><div class="thumb"><video src="assets/89671a0588.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="badge heart">♡</span><span class="badge play">▶</span></div><div class="meta"><div class="title">豆乳キムチ春雨</div><div class="ing">春雨・豆乳・キムチ</div></div></div>
+    <div class="card"><div class="thumb"><video src="assets/3a28ded828.mp4#t=0.1" muted playsinline preload="metadata"></video><span class="badge heart">♡</span><span class="badge play">▶</span></div><div class="meta"><div class="title">ゆず大根</div><div class="ing">大根・大葉・めんつゆ</div></div></div>
   </div>
 
   <div class="sec"><h2>保存したレシピ</h2><span class="more">すべて →</span></div>
   <div class="feed">
-    <div class="card"><div class="thumb"><img src="assets/3d305e1210.jpg"><span class="heart">♡</span></div><div class="meta"><div class="title">タルティーヌ集</div><div class="ing">バゲット・クリームチーズ・いちじく</div></div></div>
-    <div class="card"><div class="thumb"><img src="https://img.youtube.com/vi/lnsoGU2dSgg/hqdefault.jpg"><span class="heart">♡</span><span class="vbadge">▶</span><span class="kcal">400 kcal</span></div><div class="meta"><div class="title">完全栄養冷凍ブリトー</div><div class="ing">薄力粉・片栗粉・オリーブオイル</div></div></div>
+    <div class="card"><div class="thumb"><img src="assets/3d305e1210.jpg"><span class="badge heart">♡</span></div><div class="meta"><div class="title">タルティーヌ集</div><div class="ing">バゲット・クリームチーズ・いちじく</div></div></div>
+    <div class="card"><div class="thumb"><img src="https://img.youtube.com/vi/lnsoGU2dSgg/hqdefault.jpg"><span class="badge heart">♡</span><span class="badge play">▶</span><span class="kcal">400 kcal</span></div><div class="meta"><div class="title">完全栄養冷凍ブリトー</div><div class="ing">薄力粉・片栗粉・オリーブオイル</div></div></div>
   </div>
 
   <nav class="tabbar">
