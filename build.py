@@ -31,9 +31,55 @@ def discover_recipe_files():
             names.append(path.name)
     return names
 
+
+# Leak guard: a note can *look like* a recipe (recipe-y tags, a 【材料】
+# ingredient block, or a recipe-handle username) yet be missing the
+# `dish_name` marker, in which case discover_recipe_files() silently skips it
+# and it never reaches the site. This happened to notes structured before the
+# 2026-07-05 recipe-frontmatter rule existed, or left `unprocessed`.
+# This surfaces those so漏れ is visible on every build. Detection only —
+# never mutates notes. Excludes fashion/branding posts, restaurant/cafe
+# roundups, and meal logs that merely mention 料理/グルメ.
+RECIPE_SIGNAL_RE = re.compile(
+    r"(【材料】|材料（|材料\(|username:\s*\"[^\"]*recipe|"
+    r"痩せレシピ|ヘルシーレシピ|レンチンレシピ|簡単レシピ|腸活レシピ|美肌レシピ|作り置き)"
+)
+NON_RECIPE_TAGS = {"fashion", "branding", "korea-fashion", "東京グルメ",
+                   "東京ビストロ", "デートグルメ", "travel"}
+
+
+def find_recipe_leaks(known_names):
+    """Return [(filename, reason)] for notes that smell like recipes but have
+    no dish_name (so they're absent from the site). Non-fatal warning."""
+    known = set(known_names)
+    leaks = []
+    for path in sorted(LIT.glob("*.md")):
+        if path.name in known:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        fm, _ = parse_frontmatter(text)
+        if fm.get("dish_name") or fm.get("redirected_to"):
+            continue
+        tags = set(fm.get("tags", []) or [])
+        if tags & NON_RECIPE_TAGS:
+            continue
+        if RECIPE_SIGNAL_RE.search(text):
+            leaks.append((path.name, f"status={fm.get('status', '?')}, no dish_name"))
+    return leaks
+
 EMBED_RE = re.compile(r"!\[\[(.+?)\]\]")
 YT_ID_RE = re.compile(r"(?:v=|youtu\.be/)([\w-]+)")
 STEPS_HEADER_RE = re.compile(r"^>\s*\[![\w-]+\][+-]?\s*.*手順")
+# A callout whose header contains 材料 holds the quantity-annotated ingredient
+# list (e.g. "ズッキーニ 1本"). This is separate from frontmatter `ingredients`
+# (names only, used for food-chip filtering + cart) so quantities can be shown
+# without breaking those. Comment-section recipes get filled in via CORIN
+# appending such a callout — see task-context-linking / recipe update flow.
+INGRED_HEADER_RE = re.compile(r"^>\s*\[![\w-]+\][+-]?\s*.*材料")
+BULLET_RE = re.compile(r"^[-*]\s*(.+)$")
 NUM_ITEM_RE = re.compile(r"^\d+\.\s*(.+)$")
 CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩"
 LOOSE_STEP_RE = re.compile(r"^[" + CIRCLED + r"]\s*(.+)$|^\d+[.．]\s*(.+)$")
@@ -99,6 +145,30 @@ def extract_steps(body):
     return steps
 
 
+def extract_ingredients_detail(body):
+    """Ingredient list *with quantities* from a 材料 callout block. Returns []
+    when absent (recipe then falls back to name-only display in the app)."""
+    lines = body.split("\n")
+    items = []
+    in_block = False
+    for line in lines:
+        if INGRED_HEADER_RE.match(line.strip()):
+            in_block = True
+            continue
+        if in_block:
+            if not line.startswith(">"):
+                break
+            content = line.lstrip(">").strip()
+            if content == "":
+                break
+            m = BULLET_RE.match(content)
+            if m:
+                item = m.group(1).replace("**", "").replace("__", "").strip()
+                if item:
+                    items.append(item)
+    return items
+
+
 def extract_caption(body):
     m = re.search(r"##\s*📝\s*(?:キャプション|投稿内容)\s*\n(.*?)(?:\n##|\Z)", body, re.DOTALL)
     if not m:
@@ -156,8 +226,17 @@ def build_media(embed_path, source_info, rid, body=""):
 
 def main():
     ASSETS.mkdir(exist_ok=True)
+    recipe_files = discover_recipe_files()
+
+    leaks = find_recipe_leaks(recipe_files)
+    if leaks:
+        print(f"\n⚠️  レシピ漏れの疑い {len(leaks)}件（dish_name未付与でサイト非掲載）:")
+        for name, reason in leaks:
+            print(f"    ✗ {name}  [{reason}]")
+        print("    → wiki-ingestでdish_name/ingredients/nutritionを構造化すると載る\n")
+
     recipes = []
-    for fname in discover_recipe_files():
+    for fname in recipe_files:
         path = LIT / fname
         text = path.read_text(encoding="utf-8")
         fm, body = parse_frontmatter(text)
@@ -173,6 +252,7 @@ def main():
             "source": source_info,
             "media": media,
             "ingredients": fm.get("ingredients", []) or [],
+            "ingredients_detail": extract_ingredients_detail(body),
             "tags": fm.get("tags", []) or [],
             "nutrition": fm.get("nutrition"),
             "steps": extract_steps(body),

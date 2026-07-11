@@ -2,78 +2,159 @@ let RECIPES = [];
 let activeIngredients = new Set();
 let searchTerm = "";
 let sortedByKcal = false;
+let currentView = "all"; // all | want | staple
 
-const CART_KEY = "recipe-site-cart";
-function loadCart() {
+// ---------- storage ----------
+const CART_KEY = "recipe-site-cart";     // Map<ingredient, [recipe titles]>
+const COOKED_KEY = "recipe-site-cooked"; // Map<recipeId, count>  ← 本命
+const WANT_KEY = "recipe-site-want";     // [recipeId]（作りたいストック）
+const PANTRY_KEY = "recipe-site-pantry"; // [ingredient]（常備品＝買い物リストから外す）
+
+// 常備品の初期リスト（1回作れば以降ずっと買い物リストから自動で外れる。使いながら育てられる）
+const DEFAULT_PANTRY = [
+  "塩", "こしょう", "塩こしょう", "砂糖", "醤油", "みそ", "味噌", "酢", "みりん",
+  "料理酒", "酒", "サラダ油", "油", "オリーブオイル", "ごま油",
+  "マヨネーズ", "ケチャップ", "めんつゆ", "白だし", "和風だし", "だし", "コンソメ",
+  "にんにく", "しょうが", "片栗粉", "小麦粉", "バター", "はちみつ"
+];
+
+function loadMap(key) {
+  try { return new Map(JSON.parse(localStorage.getItem(key) || "[]")); } catch { return new Map(); }
+}
+function loadSet(key, fallback) {
   try {
-    return new Map(JSON.parse(localStorage.getItem(CART_KEY) || "[]"));
-  } catch {
-    return new Map();
-  }
+    const v = JSON.parse(localStorage.getItem(key));
+    return new Set(v && v.length ? v : (fallback || []));
+  } catch { return new Set(fallback || []); }
 }
-function saveCart(cart) {
-  localStorage.setItem(CART_KEY, JSON.stringify([...cart]));
+
+let cart = loadMap(CART_KEY);
+let cooked = loadMap(COOKED_KEY);
+let want = loadSet(WANT_KEY, []);
+let pantry = loadSet(PANTRY_KEY, DEFAULT_PANTRY);
+
+const saveCart = () => localStorage.setItem(CART_KEY, JSON.stringify([...cart]));
+const saveCooked = () => localStorage.setItem(COOKED_KEY, JSON.stringify([...cooked]));
+const saveWant = () => localStorage.setItem(WANT_KEY, JSON.stringify([...want]));
+const savePantry = () => localStorage.setItem(PANTRY_KEY, JSON.stringify([...pantry]));
+
+const STAPLE_THRESHOLD = 3; // 3回作ったら「マイ定番」に昇格
+const cookedCount = (id) => cooked.get(id) || 0;
+const isStaple = (id) => cookedCount(id) >= STAPLE_THRESHOLD;
+const isPantry = (ing) => pantry.has(ing);
+
+// ---------- actions（本命：作りたい♡・作った✓） ----------
+function toggleWant(id) {
+  if (want.has(id)) want.delete(id); else want.add(id);
+  saveWant();
 }
-let cart = loadCart();
+
+function addCooked(id) {
+  const before = cookedCount(id);
+  cooked.set(id, before + 1);
+  saveCooked();
+  return before + 1; // 新しい回数
+}
+
+function removeCooked(id) {
+  const c = cookedCount(id);
+  if (c <= 1) cooked.delete(id); else cooked.set(id, c - 1);
+  saveCooked();
+}
+
+// ---------- 買い物リスト（常備品を自動で除外） ----------
+function addRecipeToCart(recipe) {
+  let added = 0;
+  recipe.ingredients.forEach(ing => {
+    if (isPantry(ing)) return; // 常備品は入れない
+    const sources = cart.get(ing) || [];
+    if (!sources.includes(recipe.title)) sources.push(recipe.title);
+    cart.set(ing, sources);
+    added++;
+  });
+  saveCart();
+  updateCartCount();
+  return added;
+}
+
+function removeFromCart(ing) {
+  cart.delete(ing);
+  saveCart();
+  updateCartCount();
+  renderCart();
+}
 
 function updateCartCount() {
   document.getElementById("cart-count").textContent = cart.size;
 }
 
-function addRecipeToCart(recipe) {
-  recipe.ingredients.forEach(ing => {
-    const sources = cart.get(ing) || [];
-    if (!sources.includes(recipe.title)) sources.push(recipe.title);
-    cart.set(ing, sources);
-  });
-  saveCart(cart);
-  updateCartCount();
+function toast(msg) {
+  let el = document.getElementById("toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "toast";
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove("show"), 2200);
 }
 
-function removeFromCart(ing) {
-  cart.delete(ing);
-  saveCart(cart);
-  updateCartCount();
-  renderCart();
-}
-
+// ---------- 買い物リストモーダル ----------
 function renderCart() {
   const items = [...cart.entries()];
   const rows = items.length
     ? items.map(([ing, sources]) => `
       <div class="cart-item-row">
-        <span>${ing}<span style="color:#999; font-size:12px;"> — ${sources.join("・")}</span></span>
-        <button data-ing="${ing}" class="cart-remove">✕</button>
+        <span>${ing}<span class="cart-source"> — ${sources.join("・")}</span></span>
+        <div class="cart-item-btns">
+          <button data-ing="${ing}" class="cart-tostaple" title="これは常備品（今後リストから外す）">🧂常備品に</button>
+          <button data-ing="${ing}" class="cart-remove">✕</button>
+        </div>
       </div>`).join("")
-    : `<p style="color:#999; font-size:14px;">まだ何も入ってない。レシピの詳細から「買い物リストに追加」してね</p>`;
+    : `<p class="empty-hint">まだ空っぽ。「♡作りたい」タブか各レシピから材料を足してね（塩・油とかの常備品は自動で外してるよ）</p>`;
 
   document.getElementById("cart-content").innerHTML = `
     <button class="modal-close" id="cart-close">✕</button>
     <h2>🛒 買い物リスト</h2>
     ${rows}
     ${items.length ? `
-      <div style="display:flex; gap:8px; margin-top:16px;">
+      <div class="cart-actions">
+        <button id="cart-line" class="btn-line">📤 LINEで送る</button>
         <button id="cart-copy">📋 コピー</button>
-        <button id="cart-clear">すべて削除</button>
+        <button id="cart-clear" class="btn-ghost">全部消す</button>
       </div>` : ""}
   `;
-  document.getElementById("cart-close").onclick = () => document.getElementById("cart-overlay").classList.remove("open");
+  document.getElementById("cart-close").onclick = () =>
+    document.getElementById("cart-overlay").classList.remove("open");
+
   document.querySelectorAll(".cart-remove").forEach(btn => {
     btn.onclick = () => removeFromCart(btn.dataset.ing);
   });
+  document.querySelectorAll(".cart-tostaple").forEach(btn => {
+    btn.onclick = () => {
+      pantry.add(btn.dataset.ing); // 常備品リストに昇格＝次から自動で外れる（育つ）
+      savePantry();
+      removeFromCart(btn.dataset.ing);
+      toast(`「${btn.dataset.ing}」を常備品に登録。次から買い物リストに出ないよ`);
+    };
+  });
+
   if (items.length) {
+    const listText = () => "🛒今日の買い物\n" + items.map(([ing]) => "・" + ing).join("\n");
+    document.getElementById("cart-line").onclick = () => {
+      const url = "https://line.me/R/msg/text/?" + encodeURIComponent(listText());
+      window.open(url, "_blank");
+    };
     document.getElementById("cart-copy").onclick = () => {
-      const text = items.map(([ing]) => ing).join("\n");
-      navigator.clipboard.writeText(text);
+      navigator.clipboard.writeText(items.map(([ing]) => ing).join("\n"));
       const btn = document.getElementById("cart-copy");
       btn.textContent = "✓ コピーした";
       setTimeout(() => { btn.textContent = "📋 コピー"; }, 1500);
     };
     document.getElementById("cart-clear").onclick = () => {
-      cart.clear();
-      saveCart(cart);
-      updateCartCount();
-      renderCart();
+      cart.clear(); saveCart(); updateCartCount(); renderCart();
     };
   }
 }
@@ -86,12 +167,26 @@ document.getElementById("cart-overlay").addEventListener("click", (e) => {
   if (e.target.id === "cart-overlay") e.currentTarget.classList.remove("open");
 });
 
+// ---------- init ----------
 async function init() {
   const res = await fetch("data.json");
   RECIPES = await res.json();
   updateCartCount();
+  renderTabs();
   renderChips();
   renderGrid();
+}
+
+// ---------- タブ（すべて / 作りたい / マイ定番） ----------
+function renderTabs() {
+  const wantN = RECIPES.filter(r => want.has(r.id)).length;
+  const stapleN = RECIPES.filter(r => isStaple(r.id)).length;
+  document.querySelectorAll(".tab").forEach(tab => {
+    const v = tab.dataset.view;
+    tab.classList.toggle("active", v === currentView);
+    if (v === "want") tab.innerHTML = `♡ 作りたい <span class="tab-n">${wantN}</span>`;
+    if (v === "staple") tab.innerHTML = `⭐ マイ定番 <span class="tab-n">${stapleN}</span>`;
+  });
 }
 
 let chipsExpanded = false;
@@ -107,11 +202,8 @@ function makeChip(ing) {
   chip.className = "chip" + (activeIngredients.has(ing) ? " active" : "");
   chip.textContent = ing;
   chip.onclick = () => {
-    if (activeIngredients.has(ing)) {
-      activeIngredients.delete(ing);
-    } else {
-      activeIngredients.add(ing);
-    }
+    if (activeIngredients.has(ing)) activeIngredients.delete(ing);
+    else activeIngredients.add(ing);
     renderChips();
     renderGrid();
   };
@@ -127,7 +219,6 @@ function renderChips() {
   const popular = sorted.filter(([, n]) => n >= POPULAR_THRESHOLD).map(([ing]) => ing);
   const rest = sorted.filter(([, n]) => n < POPULAR_THRESHOLD).map(([ing]) => ing);
 
-  // Always show any already-active ingredient, even if it's in the "rest" bucket.
   const alwaysShow = [...activeIngredients].filter(ing => !popular.includes(ing));
   popular.concat(alwaysShow).forEach(ing => el.appendChild(makeChip(ing)));
 
@@ -135,21 +226,17 @@ function renderChips() {
     const toggle = document.createElement("span");
     toggle.className = "chip chip-toggle";
     toggle.textContent = chipsExpanded ? "− 閉じる" : `+ もっと見る（${rest.length}）`;
-    toggle.onclick = () => {
-      chipsExpanded = !chipsExpanded;
-      renderChips();
-    };
+    toggle.onclick = () => { chipsExpanded = !chipsExpanded; renderChips(); };
     el.appendChild(toggle);
-
     if (chipsExpanded) {
-      rest.forEach(ing => {
-        if (!alwaysShow.includes(ing)) el.appendChild(makeChip(ing));
-      });
+      rest.forEach(ing => { if (!alwaysShow.includes(ing)) el.appendChild(makeChip(ing)); });
     }
   }
 }
 
 function matches(r) {
+  if (currentView === "want" && !want.has(r.id)) return false;
+  if (currentView === "staple" && !isStaple(r.id)) return false;
   if (activeIngredients.size > 0) {
     for (const ing of activeIngredients) {
       if (!r.ingredients.includes(ing)) return false;
@@ -164,15 +251,9 @@ function matches(r) {
 
 function mediaThumbHtml(r) {
   const m = r.media;
-  if (m.type === "video") {
-    return `<video src="${m.file}" muted preload="metadata"></video><span class="play-badge">▶</span>`;
-  }
-  if (m.type === "image") {
-    return `<img src="${m.file}" alt="${r.title}">`;
-  }
-  if (m.type === "youtube") {
-    return `<img src="${m.thumb}" alt="${r.title}"><span class="play-badge">▶</span>`;
-  }
+  if (m.type === "video") return `<video src="${m.file}" muted preload="metadata"></video><span class="play-badge">▶</span>`;
+  if (m.type === "image") return `<img src="${m.file}" alt="${r.title}">`;
+  if (m.type === "youtube") return `<img src="${m.thumb}" alt="${r.title}"><span class="play-badge">▶</span>`;
   return "";
 }
 
@@ -190,6 +271,16 @@ function kcalBadgeHtml(r) {
   return `<span class="kcal-badge unknown">kcal不明</span>`;
 }
 
+function cardActionsHtml(r) {
+  const wanted = want.has(r.id);
+  const c = cookedCount(r.id);
+  return `
+    <div class="card-actions">
+      <button class="act-want ${wanted ? "on" : ""}" data-act="want" data-id="${r.id}" title="作りたい">${wanted ? "♥" : "♡"}</button>
+      <button class="act-cook ${c > 0 ? "on" : ""}" data-act="cook" data-id="${r.id}" title="作った">✓ 作った${c > 0 ? ` <b>${c}</b>` : ""}</button>
+    </div>`;
+}
+
 function renderGrid() {
   const grid = document.getElementById("grid");
   let list = RECIPES.filter(matches);
@@ -203,28 +294,56 @@ function renderGrid() {
   }
 
   const countEl = document.getElementById("match-count");
-  const isFiltered = activeIngredients.size > 0 || searchTerm;
+  const isFiltered = activeIngredients.size > 0 || searchTerm || currentView !== "all";
   countEl.textContent = isFiltered ? `${RECIPES.length}件中 ${list.length}件表示` : "";
 
   if (list.length === 0) {
-    grid.innerHTML = `<div class="empty-state">条件に合うレシピが見つからなかった</div>`;
+    const msg = currentView === "want" ? "「♡作りたい」がまだ無い。気になったレシピに♡を押してみて"
+      : currentView === "staple" ? `まだ定番なし。同じレシピを${STAPLE_THRESHOLD}回「✓作った」すると、ここに殿堂入りするよ⭐`
+      : "条件に合うレシピが見つからなかった";
+    grid.innerHTML = `<div class="empty-state">${msg}</div>`;
     return;
   }
 
   grid.innerHTML = list.map(r => `
     <div class="card" data-id="${r.id}">
-      <div class="card-media">${mediaThumbHtml(r)}</div>
+      <div class="card-media">
+        ${mediaThumbHtml(r)}
+        ${isStaple(r.id) ? `<span class="staple-badge">⭐ 定番</span>` : ""}
+      </div>
       <div class="card-body">
         <p class="card-title">${r.title}</p>
         ${kcalBadgeHtml(r)}
         <p class="card-ingredients">${r.ingredients.slice(0, 4).join(" / ")}</p>
+        ${cardActionsHtml(r)}
       </div>
     </div>
   `).join("");
 
   grid.querySelectorAll(".card").forEach(card => {
-    card.onclick = () => openModal(card.dataset.id);
+    card.querySelector(".card-media").onclick = () => openModal(card.dataset.id);
+    card.querySelector(".card-title").onclick = () => openModal(card.dataset.id);
   });
+  grid.querySelectorAll("[data-act]").forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      handleAction(btn.dataset.act, btn.dataset.id);
+    };
+  });
+}
+
+function handleAction(act, id) {
+  const r = RECIPES.find(x => x.id === id);
+  if (act === "want") {
+    toggleWant(id);
+    toast(want.has(id) ? `♥ 「${r.title}」を作りたいリストに追加` : `作りたいリストから外した`);
+  } else if (act === "cook") {
+    const n = addCooked(id);
+    if (n === STAPLE_THRESHOLD) toast(`⭐ 「${r.title}」がマイ定番に殿堂入り！（${n}回目）`);
+    else toast(`✓ 「${r.title}」作ったね（${n}回目）`);
+  }
+  renderTabs();
+  renderGrid();
 }
 
 function openModal(id) {
@@ -232,13 +351,9 @@ function openModal(id) {
   if (!r) return;
 
   let mediaHtml = "";
-  if (r.media.type === "video") {
-    mediaHtml = `<video src="${r.media.file}" controls></video>`;
-  } else if (r.media.type === "image") {
-    mediaHtml = `<img src="${r.media.file}" alt="${r.title}">`;
-  } else if (r.media.type === "youtube") {
-    mediaHtml = `<img src="${r.media.thumb}" alt="${r.title}">`;
-  }
+  if (r.media.type === "video") mediaHtml = `<video src="${r.media.file}" controls></video>`;
+  else if (r.media.type === "image") mediaHtml = `<img src="${r.media.file}" alt="${r.title}">`;
+  else if (r.media.type === "youtube") mediaHtml = `<img src="${r.media.thumb}" alt="${r.title}">`;
 
   let nutritionHtml = "";
   if (r.nutrition && r.nutrition.calories_kcal != null) {
@@ -247,41 +362,52 @@ function openModal(id) {
     if (n.protein_g != null) items.push(`<span class="nutrition-item">たんぱく質 ${n.protein_g}g</span>`);
     if (n.fat_g != null) items.push(`<span class="nutrition-item">脂質 ${n.fat_g}g</span>`);
     if (n.carbs_g != null) items.push(`<span class="nutrition-item">炭水化物 ${n.carbs_g}g</span>`);
-    nutritionHtml = `
-      <h3>カロリー・栄養成分</h3>
-      <div class="nutrition-row">${items.join("")}</div>`;
+    nutritionHtml = `<h3>カロリー・栄養成分</h3><div class="nutrition-row">${items.join("")}</div>`;
   } else {
-    nutritionHtml = `<h3>カロリー・栄養成分</h3><p style="font-size:13px;color:#999;">元投稿に記載なし</p>`;
+    nutritionHtml = `<h3>カロリー・栄養成分</h3><p class="muted">元投稿に記載なし</p>`;
   }
 
   const stepsHtml = r.steps.length
-    ? `<h3>手順</h3><ol>${r.steps.map(s => `<li>${s}</li>`).join("")}</ol>`
-    : "";
-
+    ? `<h3>手順</h3><ol>${r.steps.map(s => `<li>${s}</li>`).join("")}</ol>` : "";
   const captionHtml = r.caption_excerpt
-    ? `<h3>メモ</h3><p style="font-size:13px;color:#666;">${r.caption_excerpt}...</p>`
-    : "";
-
+    ? `<h3>メモ</h3><p class="muted">${r.caption_excerpt}...</p>` : "";
   const sourceLabel = { instagram: "Instagramで見る", youtube: "YouTubeで見る", threads: "Threadsで見る" }[r.source.type] || "元投稿を見る";
+
+  const wanted = want.has(r.id);
+  const c = cookedCount(r.id);
+  const pantryNote = r.ingredients.some(isPantry)
+    ? `<p class="pantry-note">🧂 ${r.ingredients.filter(isPantry).join("・")} は常備品として買い物リストから自動で外れるよ</p>` : "";
+  // Prefer quantity-annotated list (from a 材料 callout in the note) when present;
+  // otherwise fall back to name-only chips. Cart/filtering always use r.ingredients (names).
+  const ingredientsListHtml = (r.ingredients_detail && r.ingredients_detail.length)
+    ? `<ul>${r.ingredients_detail.map(i => `<li>${i}</li>`).join("")}</ul>`
+    : `<ul>${r.ingredients.map(i => `<li class="${isPantry(i) ? "ing-pantry" : ""}">${i}${isPantry(i) ? " <span class=\"ing-tag\">常備</span>" : ""}</li>`).join("")}</ul>`;
 
   document.getElementById("modal-content").innerHTML = `
     <button class="modal-close" id="modal-close">✕</button>
     <div class="modal-media">${mediaHtml}</div>
-    <h2>${r.title}</h2>
+    <h2>${r.title} ${isStaple(r.id) ? `<span class="staple-inline">⭐定番</span>` : ""}</h2>
+    <div class="modal-actions">
+      <button class="act-want ${wanted ? "on" : ""}" id="m-want">${wanted ? "♥ 作りたい" : "♡ 作りたい"}</button>
+      <button class="act-cook ${c > 0 ? "on" : ""}" id="m-cook">✓ 作った${c > 0 ? ` <b>${c}回</b>` : ""}</button>
+    </div>
     <h3>材料</h3>
-    <ul>${r.ingredients.map(i => `<li>${i}</li>`).join("")}</ul>
-    <button id="add-to-cart" style="margin-top:8px;">🛒 買い物リストに追加</button>
+    ${ingredientsListHtml}
+    ${pantryNote}
+    <button id="add-to-cart" class="btn-cart">🛒 材料を買い物リストへ（常備品は除く）</button>
     ${nutritionHtml}
     ${stepsHtml}
     ${captionHtml}
     <a class="source-link" href="${r.source.url}" target="_blank" rel="noopener">${sourceLabel} ↗</a>
   `;
   document.getElementById("modal-close").onclick = closeModal;
+  document.getElementById("m-want").onclick = () => { handleAction("want", r.id); openModal(r.id); };
+  document.getElementById("m-cook").onclick = () => { handleAction("cook", r.id); openModal(r.id); };
   document.getElementById("add-to-cart").onclick = () => {
-    addRecipeToCart(r);
+    const n = addRecipeToCart(r);
     const btn = document.getElementById("add-to-cart");
-    btn.textContent = "✓ 追加した";
-    setTimeout(() => { btn.textContent = "🛒 買い物リストに追加"; }, 1200);
+    btn.textContent = n > 0 ? `✓ ${n}品を追加した` : "常備品だけだったよ🧂";
+    setTimeout(() => { btn.textContent = "🛒 材料を買い物リストへ（常備品は除く）"; }, 1500);
   };
   document.getElementById("modal-overlay").classList.add("open");
 }
@@ -292,6 +418,14 @@ function closeModal() {
 
 document.getElementById("modal-overlay").addEventListener("click", (e) => {
   if (e.target.id === "modal-overlay") closeModal();
+});
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    currentView = tab.dataset.view;
+    renderTabs();
+    renderGrid();
+  });
 });
 
 document.getElementById("search").addEventListener("input", (e) => {
@@ -309,9 +443,11 @@ document.getElementById("reset-all").addEventListener("click", () => {
   activeIngredients.clear();
   searchTerm = "";
   sortedByKcal = false;
+  currentView = "all";
   document.getElementById("search").value = "";
   document.getElementById("sort-kcal").textContent = "🔥 低カロリー順";
-  document.querySelectorAll(".chip.active").forEach(c => c.classList.remove("active"));
+  renderTabs();
+  renderChips();
   renderGrid();
 });
 
