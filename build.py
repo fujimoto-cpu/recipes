@@ -10,26 +10,35 @@ import yaml
 
 VAULT = Path("/Users/yuriko/Documents/corin")
 LIT = VAULT / "20_📂 zettelkasten" / "LiteratureNote"
+# 2026-07-19: self-made recipes (from /pfc's "save this recipe?" flow) live
+# here instead of LiteratureNote — LiteratureNote is for ingested external
+# content, health/food/recipes/ is the user's own cooking log. Both are
+# scanned the same way (dish_name marker) so the site doesn't care which
+# folder a recipe came from.
+HEALTH_RECIPES = VAULT / "01_🏠 private" / "health" / "food" / "recipes"
+RECIPE_DIRS = [LIT, HEALTH_RECIPES]
 ASSETS = Path(__file__).parent / "assets"
 
-# Auto-discovery: any LiteratureNote whose frontmatter has been structured
-# with `dish_name` (CORIN / wiki-ingest's recipe format marker) is picked up
-# automatically. This is what makes "save a recipe -> site updates itself"
-# possible without hand-editing a file list each time.
+# Auto-discovery: any note in RECIPE_DIRS whose frontmatter has been
+# structured with `dish_name` (CORIN / wiki-ingest's recipe format marker) is
+# picked up automatically. This is what makes "save a recipe -> site updates
+# itself" possible without hand-editing a file list each time.
 # See .claude/skills/wiki-ingest/SKILL.md (recipe format) and
 # .claude/skills/recipe-site/SKILL.md (this build + publish step) in the
 # corin vault for how new recipes flow in.
 def discover_recipe_files():
-    names = []
-    for path in sorted(LIT.glob("*.md")):
-        try:
-            text = path.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError):
-            continue
-        fm, _ = parse_frontmatter(text)
-        if fm.get("dish_name"):
-            names.append(path.name)
-    return names
+    """Returns [(dir_path, filename), ...] across all RECIPE_DIRS."""
+    found = []
+    for dir_path in RECIPE_DIRS:
+        for path in sorted(dir_path.glob("*.md")):
+            try:
+                text = path.read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError):
+                continue
+            fm, _ = parse_frontmatter(text)
+            if fm.get("dish_name"):
+                found.append((dir_path, path.name))
+    return found
 
 
 # Leak guard: a note can *look like* a recipe (recipe-y tags, a 【材料】
@@ -50,7 +59,9 @@ NON_RECIPE_TAGS = {"fashion", "branding", "korea-fashion", "東京グルメ",
 
 def find_recipe_leaks(known_names):
     """Return [(filename, reason)] for notes that smell like recipes but have
-    no dish_name (so they're absent from the site). Non-fatal warning."""
+    no dish_name (so they're absent from the site). Non-fatal warning.
+    Scoped to LIT only — health/food/recipes/ is a small folder CORIN manages
+    directly via /pfc's recipe-save flow, so leak risk there is low."""
     known = set(known_names)
     leaks = []
     for path in sorted(LIT.glob("*.md")):
@@ -228,7 +239,8 @@ def main():
     ASSETS.mkdir(exist_ok=True)
     recipe_files = discover_recipe_files()
 
-    leaks = find_recipe_leaks(recipe_files)
+    lit_names = [fname for dir_path, fname in recipe_files if dir_path == LIT]
+    leaks = find_recipe_leaks(lit_names)
     if leaks:
         print(f"\n⚠️  レシピ漏れの疑い {len(leaks)}件（dish_name未付与でサイト非掲載）:")
         for name, reason in leaks:
@@ -236,12 +248,14 @@ def main():
         print("    → wiki-ingestでdish_name/ingredients/nutritionを構造化すると載る\n")
 
     recipes = []
-    for fname in recipe_files:
-        path = LIT / fname
+    for dir_path, fname in recipe_files:
+        path = dir_path / fname
         text = path.read_text(encoding="utf-8")
         fm, body = parse_frontmatter(text)
 
-        rid = slugify_id(fname)
+        # Prefix with the source dir so two recipes with the same filename
+        # in different folders (LIT vs health/food/recipes/) don't collide.
+        rid = slugify_id(f"{dir_path.name}/{fname}")
         source_info = resolve_source(fm, body)
         embed_path = find_embed(body)
         media = build_media(embed_path, source_info, rid, body)
