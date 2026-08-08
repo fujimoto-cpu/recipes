@@ -49,8 +49,12 @@ def discover_recipe_files():
 # This surfaces those so漏れ is visible on every build. Detection only —
 # never mutates notes. Excludes fashion/branding posts, restaurant/cafe
 # roundups, and meal logs that merely mention 料理/グルメ.
+# 2026-08-08: added ＜材料/＜準備するもの/＜作り方＞ — some IG accounts label
+# their ingredient/steps sections with full-width angle brackets instead of
+# 【材料】, which the original pattern missed entirely (found via manual
+# Vault-wide recheck after "もっとあるよね？" — see こんにゃくで作る洋風イカオクラ風.md).
 RECIPE_SIGNAL_RE = re.compile(
-    r"(【材料】|材料（|材料\(|username:\s*\"[^\"]*recipe|"
+    r"(【材料】|材料（|材料\(|＜材料|＜準備するもの|＜作り方＞|username:\s*\"[^\"]*recipe|"
     r"痩せレシピ|ヘルシーレシピ|レンチンレシピ|簡単レシピ|腸活レシピ|美肌レシピ|作り置き)"
 )
 NON_RECIPE_TAGS = {"fashion", "branding", "korea-fashion", "東京グルメ",
