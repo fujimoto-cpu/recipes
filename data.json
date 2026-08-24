@@ -43,6 +43,59 @@
     "caption_excerpt": "@ariru_healthy_oyatsu ←太らない簡単おやつを見る♡ みんなは夏の思い出のおやつってある？ おばあちゃんが買ってくれるわらび餅が懐かしくて🥹🤍 もう大人になったけど、わらび餅はいまでも夏の定番🥰 手作りでよりヘルシーに体に優しく作ってみたよ🫶🏻✨ 他にも太らない簡単おやつを発信し"
   },
   {
+    "id": "37eaa3a27c",
+    "title": "いちじくのカルパッチョ",
+    "source": {
+      "type": "instagram",
+      "url": "https://www.instagram.com/reel/Db0H9PpoKrk/",
+      "handle": "valin_food"
+    },
+    "media": {
+      "type": "image",
+      "file": "assets/37eaa3a27c.jpg"
+    },
+    "ingredients": [
+      "いちじく",
+      "シェーブルチーズ（フレッシュ）",
+      "ルッコラ",
+      "生ハム",
+      "くるみ",
+      "塩",
+      "こしょう",
+      "くるみ油",
+      "オリーブオイル",
+      "はちみつ"
+    ],
+    "ingredients_detail": [
+      "いちじく（数個）",
+      "シェーブルチーズ（フレッシュタイプ、または他のチーズでも可）",
+      "ルッコラ",
+      "生ハム",
+      "くるみ",
+      "塩、こしょう"
+    ],
+    "tags": [
+      "instagram",
+      "レシピ",
+      "いちじく",
+      "サラダ",
+      "前菜"
+    ],
+    "nutrition": {
+      "calories_kcal": null,
+      "protein_g": null,
+      "fat_g": null,
+      "carbs_g": null
+    },
+    "steps": [
+      "いちじくを薄くスライスし、皿に円形に並べる（カルパッチョ状に）",
+      "くるみ油・オリーブオイル・はちみつを混ぜてヴィネグレットを作る",
+      "いちじくの上にちぎったルッコラ・生ハム・砕いたシェーブルチーズ・くるみを散らす",
+      "塩こしょうをふり、ヴィネグレットを回しかけて完成"
+    ],
+    "caption_excerpt": "Carpaccio de figues 😍 Attention, ne faites pas comme moi, n’écrasez surtout pas vos figues avec un verre à pied !! Je n’y ai pas pensé sur le moment, "
+  },
+  {
     "id": "8460323f7e",
     "title": "ツナマヨにんじんサラダ",
     "source": {
