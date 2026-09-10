@@ -51,8 +51,8 @@
       "handle": "valin_food"
     },
     "media": {
-      "type": "image",
-      "file": "assets/37eaa3a27c.jpg"
+      "type": "video",
+      "file": "assets/37eaa3a27c.mp4"
     },
     "ingredients": [
       "いちじく",
@@ -942,8 +942,8 @@
       "handle": "rako_yarikuri"
     },
     "media": {
-      "type": "image",
-      "file": "assets/ecbdaab079.jpg"
+      "type": "video",
+      "file": "assets/ecbdaab079.mp4"
     },
     "ingredients": [
       "干し芋",
@@ -1678,8 +1678,8 @@
       "handle": "maya_cohal"
     },
     "media": {
-      "type": "image",
-      "file": "assets/894190752f.jpg"
+      "type": "video",
+      "file": "assets/894190752f.mp4"
     },
     "ingredients": [
       "プリ",
@@ -1856,8 +1856,8 @@
       "handle": "meg_hakko_beauty"
     },
     "media": {
-      "type": "image",
-      "file": "assets/e59a8814bc.jpg"
+      "type": "video",
+      "file": "assets/e59a8814bc.mp4"
     },
     "ingredients": [
       "にんじん",
@@ -1932,8 +1932,8 @@
       "handle": "kiko_wine_"
     },
     "media": {
-      "type": "image",
-      "file": "assets/ef797df367.jpg"
+      "type": "video",
+      "file": "assets/ef797df367.mp4"
     },
     "ingredients": [
       "絹豆腐",
@@ -2017,8 +2017,8 @@
       "handle": "fuku_hakkou.gohan"
     },
     "media": {
-      "type": "image",
-      "file": "assets/ddfe8780ea.jpg"
+      "type": "video",
+      "file": "assets/ddfe8780ea.mp4"
     },
     "ingredients": [
       "きゅうり",
@@ -2159,8 +2159,8 @@
       "handle": "shinya6727"
     },
     "media": {
-      "type": "image",
-      "file": "assets/6c8f6df7cd.jpg"
+      "type": "video",
+      "file": "assets/6c8f6df7cd.mp4"
     },
     "ingredients": [
       "ズッキーニ",
