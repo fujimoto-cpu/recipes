@@ -292,6 +292,45 @@
     "caption_excerpt": "⚫︎タルティーヌ集 去年まで作ったタルティーヌ集 僕が料理にハマった キッカケの一つでもあります。 今年は少しだけ 捻りを効かせたタルティーヌ作っていきます！"
   },
   {
+    "id": "f57d27c27b",
+    "title": "沼（鶏むね肉と野菜の重合炊きお粥）",
+    "source": {
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=NJtgQEXAjNI",
+      "handle": "マッスルグリル"
+    },
+    "media": {
+      "type": "image",
+      "file": "assets/f57d27c27b.jpg"
+    },
+    "ingredients": [
+      "米",
+      "干し椎茸",
+      "オクラ",
+      "鶏むね肉",
+      "卵"
+    ],
+    "ingredients_detail": [],
+    "tags": [
+      "youtube",
+      "recipe",
+      "diet"
+    ],
+    "nutrition": {
+      "calories_kcal": 1800,
+      "protein_g": null,
+      "fat_g": null,
+      "carbs_g": null
+    },
+    "steps": [
+      "炊飯器に米→干し椎茸→オクラ→鶏むね肉（切らずにそのまま）の順で入れる（順番を間違えると米がうまく炊けない）。",
+      "塩をして、大量の水（約1.5〜2L）を入れる。水分量を多くするのが「沼」の最重要ポイント。",
+      "カレー粉を加え、重合炊き機能で一晩（6〜8時間程度）じっくり炊く。翌朝には鶏肉・野菜がホロホロに崩れた状態になる。",
+      "炊き上がったらタッパー4つに小分けし、朝・昼・夕・夜の4食に分けて食べる。"
+    ],
+    "caption_excerpt": ""
+  },
+  {
     "id": "a112daf168",
     "title": "秋の副菜4種（さつまいもの甘煮・ブロッコリーの鶏ガラ和え・かぼちゃのサラダ・えのきのなめたけ）",
     "source": {
@@ -861,43 +900,6 @@
     "caption_excerpt": "他のレシピはこちら▶@miki_beauty_recipe 食べる美容液🥕🍠 腸から整えて、肌も変わる\"丸ごと腸活サラダ\" なんか最近 ✔︎ 肌荒れしやすい ✔︎ くすみが気になる ✔︎ 便秘ぎみ そんな人に食べてほしい🤍 レンチンして混ぜるだけだから 忙しくても続けやすいのもポイント◎ このレシピ"
   },
   {
-    "id": "20a67e36da",
-    "title": "豚トマレタス",
-    "source": {
-      "type": "instagram",
-      "url": "https://www.instagram.com/reel/DXL5dr5idA7/",
-      "handle": "aya_dietrecipe_life"
-    },
-    "media": {
-      "type": "none",
-      "file": null
-    },
-    "ingredients": [
-      "豚もも肉",
-      "レタス",
-      "トマト",
-      "料理酒",
-      "塩こしょう",
-      "ポン酢"
-    ],
-    "ingredients_detail": [],
-    "tags": [
-      "レシピ",
-      "ヘルシーレシピ",
-      "痩せレシピ",
-      "レンチンレシピ",
-      "高タンパク"
-    ],
-    "nutrition": {
-      "calories_kcal": 275,
-      "protein_g": 27,
-      "fat_g": null,
-      "carbs_g": null
-    },
-    "steps": [],
-    "caption_excerpt": ""
-  },
-  {
     "id": "aec855f672",
     "title": "無限きゅうり漬け",
     "source": {
@@ -980,6 +982,38 @@
       "粗熱取れたら冷蔵庫で30分冷やす"
     ],
     "caption_excerpt": "半年で10kg痩せた秘密のレシピ❤️ 後で見返せる様に保存がおすすめです📝 @izumi_diet_recipe 注意点⚠️ オオバコって水分含むとぷるぷるに膨らむから、 少量でもめっちゃお腹ふくれる優秀食材🥹🩵 ただし！一日8g以上食べたらお腹ゆるくなる人も 居るから注意してね✨ 太らない ふわト"
+  },
+  {
+    "id": "e88ea23e89",
+    "title": "アザラシコロッケ",
+    "source": {
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=V9kc6hb9RS8",
+      "handle": "ポコホーム"
+    },
+    "media": {
+      "type": "image",
+      "file": "assets/e88ea23e89.jpg"
+    },
+    "ingredients": [
+      "じゃがいも",
+      "えび",
+      "チーズ",
+      "パン粉"
+    ],
+    "ingredients_detail": [],
+    "tags": [
+      "youtube",
+      "recipe"
+    ],
+    "nutrition": {
+      "calories_kcal": null,
+      "protein_g": null,
+      "fat_g": null,
+      "carbs_g": null
+    },
+    "steps": [],
+    "caption_excerpt": ""
   },
   {
     "id": "ecbdaab079",
@@ -1229,6 +1263,89 @@
       "タレ・ドレッシングと和えて完成"
     ],
     "caption_excerpt": "産後17kg痩せたダイエットレシピはこちら▶︎ @hina_recipe_diet 材料２つ！丸ごとにんじんサラダ🥕 いつでも見返せるように【保存】がおすすめ✨ 「え、これ人参だけ？」って驚かれる🤤 デパ地下のデリ風サラダがレンジだけで完成！ 味見の段階で半分なくなるくらい 中毒性やばいです…💓 み"
+  },
+  {
+    "id": "1cf6430329",
+    "title": "沼（鶏むね肉と野菜の炊飯器雑炊）",
+    "source": {
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=jjvVVo4X3Uc",
+      "handle": "料理研究家リュウジのバズレシピ"
+    },
+    "media": {
+      "type": "image",
+      "file": "assets/1cf6430329.jpg"
+    },
+    "ingredients": [
+      "米",
+      "えのき",
+      "オクラ",
+      "ブロッコリー",
+      "鶏むね肉",
+      "玉ねぎ",
+      "鯖水煮缶"
+    ],
+    "ingredients_detail": [],
+    "tags": [
+      "youtube",
+      "recipe",
+      "diet"
+    ],
+    "nutrition": {
+      "calories_kcal": null,
+      "protein_g": null,
+      "fat_g": null,
+      "carbs_g": null
+    },
+    "steps": [
+      "野菜（ブロッコリー・オクラ・えのき）と鶏むね肉（切らずにそのまま）を炊飯器に入れる。",
+      "米1合・水800cc・調味料（こしょう・ガーリックパウダー・ガラスープ・塩・カレー粉）を加えて通常炊飯。約1時間で完成。",
+      "炊き上がったら鶏むね肉をしゃもじでほぐして全体を混ぜる。塩気が足りなければ味塩で調整。",
+      "副菜：玉ねぎをスライスして10分ほど水にさらし辛味を抜き、水気を絞る。鯖缶を崩して和え、醤油・酢・味の素で味付け。"
+    ],
+    "caption_excerpt": ""
+  },
+  {
+    "id": "0c694af8f0",
+    "title": "地獄沼（血の池沼・ピリ辛炊飯器お粥）",
+    "source": {
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=Dw-ZhHwfRcA",
+      "handle": "料理研究家リュウジのバズレシピ"
+    },
+    "media": {
+      "type": "image",
+      "file": "assets/0c694af8f0.jpg"
+    },
+    "ingredients": [
+      "米",
+      "小松菜",
+      "にんにく",
+      "鶏むね肉",
+      "オクラ",
+      "キムチ",
+      "豆板醤",
+      "納豆"
+    ],
+    "ingredients_detail": [],
+    "tags": [
+      "youtube",
+      "recipe",
+      "diet"
+    ],
+    "nutrition": {
+      "calories_kcal": null,
+      "protein_g": null,
+      "fat_g": null,
+      "carbs_g": null
+    },
+    "steps": [
+      "米150gを研いで炊飯器に入れる。",
+      "小松菜（ヘタも食べられる部分は切って使う）、にんにく（切らずそのまま）、鶏むね肉（切らずそのまま・皮つきでOK）、冷凍刻みオクラ、キムチを順に入れる。",
+      "豆板醤・本だし・塩・水650ccを加え、通常炊飯モードで炊く（保温での追加調理は必須ではない。心配な人は炊飯後30分保温すると鶏肉がよりホロホロになる）。",
+      "炊き上がったら鶏肉をしゃもじでほぐしながら全体を混ぜて茶碗に盛る。お好みで納豆（タレ・唐辛子と混ぜたもの）を添える。"
+    ],
+    "caption_excerpt": ""
   },
   {
     "id": "5fea77d9d5",
