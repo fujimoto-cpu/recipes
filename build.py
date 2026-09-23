@@ -18,6 +18,15 @@ LIT = VAULT / "20_📂 zettelkasten" / "LiteratureNote"
 HEALTH_RECIPES = VAULT / "01_🏠 private" / "health" / "food" / "recipes"
 RECIPE_DIRS = [LIT, HEALTH_RECIPES]
 ASSETS = Path(__file__).parent / "assets"
+# 2026-09-23: a recipe note may point at its own designed recipe page via
+# frontmatter `html_file:` (a filename next to the note). It is copied here as
+# pages/<id>.html and linked from the recipe modal ("📄 レシピページ").
+PAGES = Path(__file__).parent / "pages"
+PAGE_SKELETON = (
+    "<!doctype html>\n<html lang=\"ja\">\n<head>\n<meta charset=\"utf-8\">\n"
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">\n"
+    "</head>\n<body>\n{body}\n</body>\n</html>\n"
+)
 
 # Auto-discovery: any note in RECIPE_DIRS whose frontmatter has been
 # structured with `dish_name` (CORIN / wiki-ingest's recipe format marker) is
@@ -239,6 +248,24 @@ def build_media(embed_path, source_info, rid, body=""):
     return {"type": "none", "file": None}
 
 
+def build_page(fm, dir_path, rid):
+    """Copy the note's `html_file` recipe page into pages/. Artifact-style
+    pages are fragments (no <html>), so wrap them in a minimal skeleton."""
+    name = fm.get("html_file")
+    if not name:
+        return None
+    src = dir_path / str(name)
+    if not src.exists():
+        print(f"  ⚠ html_file が見つからない: {src}")
+        return None
+    html = src.read_text(encoding="utf-8")
+    if "<html" not in html.lower():
+        html = PAGE_SKELETON.format(body=html)
+    PAGES.mkdir(exist_ok=True)
+    (PAGES / f"{rid}.html").write_text(html, encoding="utf-8")
+    return f"pages/{rid}.html"
+
+
 def main():
     ASSETS.mkdir(exist_ok=True)
     recipe_files = discover_recipe_files()
@@ -275,6 +302,7 @@ def main():
             "nutrition": fm.get("nutrition"),
             "steps": extract_steps(body),
             "caption_excerpt": extract_caption(body),
+            "page": build_page(fm, dir_path, rid),
         })
 
     out = Path(__file__).parent / "data.json"

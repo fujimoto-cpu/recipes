@@ -221,6 +221,8 @@ body {
 .nutrition-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
 .nutrition-item { font-size: 12px; background: var(--soft); color: var(--ink); padding: 5px 12px; border-radius: 999px; font-weight: 600; }
 
+.page-link { display: inline-block; margin: 4px 0 12px; padding: 8px 16px; border-radius: 999px; background: #E6F0DE; color: #2E3A2C; font-size: 14px; font-weight: 700; text-decoration: none; }
+.page-link:hover { background: #d6e7ca; }
 .source-link { display: inline-block; margin-top: 18px; font-size: 13px; color: var(--ink); text-decoration: none; font-weight: 700; }
 
 .btn-cart {

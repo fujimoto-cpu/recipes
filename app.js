@@ -556,6 +556,7 @@ function openModal(id) {
     <button class="modal-close" id="modal-close">✕</button>
     <div class="modal-media">${mediaHtml}</div>
     <h2>${r.title} ${isStaple(r.id) ? `<span class="staple-inline">⭐定番</span>` : ""}</h2>
+    ${r.page ? `<a class="page-link" href="${r.page}" target="_blank" rel="noopener">📄 レシピページを開く ↗</a>` : ""}
     <div class="modal-actions">
       <button class="act-want ${wanted ? "on" : ""}" id="m-want">${wanted ? "♥ 作りたい" : "♡ 作りたい"}</button>
       <button class="act-cook ${c > 0 ? "on" : ""}" id="m-cook">✓ 作った${c > 0 ? ` <b>${c}回</b>` : ""}</button>

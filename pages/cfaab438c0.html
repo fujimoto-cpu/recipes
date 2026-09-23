@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>ストウブで作る沼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --ground:#FAFBF6;
+  --paper:#FFFFFF;
+  --ink:#2E3A2C;
+  --muted:#6B7866;
+  --line:#E3E9DC;
+  --green:#6E9A5B;
+  --green-soft:#E6F0DE;
+  --curry:#E0A82E;
+  --curry-soft:#FBF0D2;
+  --pink-soft:#FBE7E4;
+  --blue-soft:#E3EEF6;
+  --r-lg:22px;
+  --r-md:14px;
+  --display:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
+  --body:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.75;padding-inline:16px;padding-block:28px 56px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.35}
+h2{font-size:21px;font-weight:900;display:flex;align-items:center;gap:10px}
+h2 .dot{width:12px;height:12px;border-radius:50%;background:var(--green);flex:none}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)}
+small,.cap{font-size:12.5px;color:var(--muted)}
+
+/* hero */
+.hero{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:26px 24px;display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}
+.eyebrow{font-size:12px;letter-spacing:.12em;color:var(--green);font-weight:700}
+.hero h1{font-size:clamp(28px,6vw,38px);font-weight:900;margin-top:4px}
+.hero h1 span{color:var(--green)}
+.lead{margin-top:10px;color:var(--muted);max-width:40em}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{font-size:13px;padding:4px 12px;border-radius:999px;background:var(--green-soft);color:var(--ink);font-weight:500}
+.chip.c{background:var(--curry-soft)}
+.chip.b{background:var(--blue-soft)}
+.pot{width:118px;height:auto}
+@media (max-width:560px){.hero{grid-template-columns:1fr}.pot{order:-1;width:92px}}
+
+/* sections */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 22px 24px;display:flex;flex-direction:column;gap:16px}
+
+/* ingredients */
+.ing{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.ing li{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 2px;border-bottom:1px dashed var(--line)}
+.ing li:last-child{border-bottom:0}
+.ing input{width:18px;height:18px;accent-color:var(--green);margin:0}
+.ing label{cursor:pointer}
+.ing .amt{font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px;text-align:right}
+.ing .note{display:block;font-size:12px;color:var(--muted)}
+.ing input:checked + label{text-decoration:line-through;color:var(--muted)}
+.subhead{font-size:12.5px;font-weight:700;color:var(--curry);letter-spacing:.08em;margin-top:6px}
+
+/* heat timeline */
+.heat{display:grid;grid-template-columns:1.2fr 3fr 1.8fr;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--line)}
+.heat div{padding:10px 12px;font-size:13px;line-height:1.45}
+.heat b{display:block;font-family:var(--display);font-size:14px}
+.h1{background:#FCE3D6}.h2{background:var(--curry-soft)}.h3{background:var(--blue-soft)}
+@media (max-width:480px){.heat{grid-template-columns:1fr}}
+
+/* steps */
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:36px 1fr;gap:14px;align-items:start}
+.steps li::before{counter-increment:s;content:counter(s);width:36px;height:36px;border-radius:50%;background:var(--green-soft);color:var(--green);font-family:var(--display);font-weight:900;font-size:17px;display:grid;place-items:center}
+.steps .t{display:inline-block;font-size:12px;padding:1px 9px;border-radius:999px;background:var(--curry-soft);margin-left:6px;vertical-align:1px;font-weight:500}
+.steps .hint{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+
+/* tips grid */
+.tips{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (max-width:560px){.tips{grid-template-columns:1fr}}
+.tip{border-radius:var(--r-md);padding:14px 16px;background:var(--green-soft);display:flex;flex-direction:column;gap:4px}
+.tip.warn{background:var(--pink-soft)}
+.tip.info{background:var(--blue-soft)}
+.tip.cur{background:var(--curry-soft)}
+.tip h3{font-size:14.5px}
+.tip p{font-size:13.5px;line-height:1.65}
+
+/* nutrition */
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:10px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+thead th{font-size:12px;color:var(--muted);font-weight:500}
+tr.em td{font-weight:700;background:var(--green-soft)}
+.big{display:flex;gap:10px;flex-wrap:wrap}
+.big div{flex:1 1 140px;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}
+.big b{display:block;font-family:var(--display);font-size:26px;font-weight:900;color:var(--green);line-height:1.2}
+
+/* freeze */
+.freeze-head{display:flex;gap:10px;flex-wrap:wrap}
+.pill{border-radius:var(--r-md);padding:10px 16px;background:var(--blue-soft);font-size:13px}
+.pill b{font-family:var(--display);font-size:20px;display:block}
+.pill.fr{background:var(--green-soft)}
+ul.dots{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+ul.dots li::marker{color:var(--green)}
+
+.src{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.src a{color:var(--green)}
+a:focus-visible,input:focus-visible,label:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div>
+      <div class="eyebrow">リュウジ式「至高の沼」を ストウブでアレンジ</div>
+      <h1>ストウブで作る<span>沼</span></h1>
+      <p class="lead">米1合で5〜6食分。鶏むね肉と野菜を、カレー粉を効かせたとろとろの雑炊に炊き上げる減量ごはん。炊飯器の代わりにストウブと弱火で仕上げるよ。</p>
+      <div class="chips">
+        <span class="chip">5〜6食分</span>
+        <span class="chip c">約1時間（放置含む）</span>
+        <span class="chip b">ストウブ 22cm〜</span>
+        <span class="chip b">IH・ガスOK</span>
+      </div>
+    </div>
+    <svg class="pot" viewBox="0 0 120 100" aria-hidden="true">
+      <path d="M40 30 q20 -14 40 0" fill="none" stroke="#C9D6BF" stroke-width="2" stroke-linecap="round"/>
+      <path d="M50 20 q10 -8 20 0" fill="none" stroke="#C9D6BF" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="60" cy="42" rx="44" ry="9" fill="#6E9A5B"/>
+      <circle cx="60" cy="31" r="5" fill="#6E9A5B"/>
+      <rect x="18" y="46" width="84" height="40" rx="14" fill="#8FB07E"/>
+      <rect x="6" y="54" width="14" height="8" rx="4" fill="#8FB07E"/>
+      <rect x="100" y="54" width="14" height="8" rx="4" fill="#8FB07E"/>
+      <ellipse cx="60" cy="47" rx="42" ry="4" fill="#F6E3A8"/>
+    </svg>
+  </header>
+
+  <section class="card" aria-labelledby="h-ing">
+    <h2 id="h-ing"><span class="dot"></span>材料 <small>（米1合＝5〜6食分）</small></h2>
+    <ul class="ing">
+      <li><input type="checkbox" id="i1"><label for="i1">米<span class="note">軽く1〜2回すすぐ程度</span></label><span class="amt">1合（150g）</span></li>
+      <li><input type="checkbox" id="i2"><label for="i2">水</label><span class="amt">800ml</span></li>
+      <li><input type="checkbox" id="i3"><label for="i3">鶏むね肉<span class="note">しっかり減量するなら皮なし・切らずに丸ごと</span></label><span class="amt">1枚（約300g）</span></li>
+      <li><input type="checkbox" id="i4"><label for="i4">冷凍ブロッコリー<span class="note">凍ったままでOK</span></label><span class="amt">1袋</span></li>
+      <li><input type="checkbox" id="i5"><label for="i5">冷凍オクラ<span class="note">凍ったままでOK・とろみの素</span></label><span class="amt">1袋</span></li>
+      <li><input type="checkbox" id="i6"><label for="i6">えのき<span class="note">根元を落としてざく切り</span></label><span class="amt">1袋</span></li>
+    </ul>
+    <div class="subhead">調味料</div>
+    <ul class="ing">
+      <li><input type="checkbox" id="i7"><label for="i7">ガラスープの素</label><span class="amt">小さじ2</span></li>
+      <li><input type="checkbox" id="i8"><label for="i8">塩</label><span class="amt">小さじ1/2</span></li>
+      <li><input type="checkbox" id="i9"><label for="i9">カレー粉</label><span class="amt">大さじ1</span></li>
+      <li><input type="checkbox" id="i10"><label for="i10">こしょう・ガーリックパウダー</label><span class="amt">各6〜8振り</span></li>
+    </ul>
+  </section>
+
+  <section class="card" aria-labelledby="h-steps">
+    <h2 id="h-steps"><span class="dot"></span>作り方</h2>
+    <div class="heat" aria-label="火加減の流れ">
+      <div class="h1"><b>中火</b>沸騰まで</div>
+      <div class="h2"><b>ごく弱火・フタあり</b>30〜35分／途中で1〜2回混ぜる</div>
+      <div class="h3"><b>火を止めて放置</b>余熱で15〜20分</div>
+    </div>
+    <ol class="steps">
+      <li><div>米 → 水 → 野菜 → 鶏むね肉（丸ごと）の順に入れて、調味料を全部入れる。</div></li>
+      <li><div>フタをせずに<b>中火</b>で沸かす。沸いたら<b>底から一度しっかり混ぜる</b>。<span class="hint">米が鍋底にくっつくのを防ぐため</span></div></li>
+      <li><div>フタをして<b>ごく弱火</b>に。<span class="t">30〜35分</span><span class="hint">途中で1〜2回、底からこそげるように混ぜる</span></div></li>
+      <li><div>火を止めて、フタをしたまま放置。<span class="t">15〜20分</span><span class="hint">余熱で米と鶏肉をホロホロにする</span></div></li>
+      <li><div>鶏むね肉を木べらでほぐしながら全体を混ぜる。塩気が足りなければ味塩で調整。</div></li>
+    </ol>
+  </section>
+
+  <section class="card" aria-labelledby="h-tips">
+    <h2 id="h-tips"><span class="dot"></span>ストウブのコツ</h2>
+    <div class="tips">
+      <div class="tip info"><h3>サイズは22cm以上</h3><p>20cm（2.2L）だとふきこぼれそうなくらいギリギリ。容量の2/3までに収めるのが目安。</p></div>
+      <div class="tip warn"><h3>底の焦げつきに注意</h3><p>炊飯器と違って底に熱が集まるので、弱火をキープして途中で混ぜるのは必須。</p></div>
+      <div class="tip"><h3>水は800mlのまま</h3><p>フタの密閉が強くて水はほぼ飛ばないよ。もったりしすぎたら水を足して調整。</p></div>
+      <div class="tip cur"><h3>鶏肉が厚いとき</h3><p>火の通りが心配なら、半分に切って入れてもOK。</p></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-ih">
+    <h2 id="h-ih"><span class="dot"></span>IHで使うとき</h2>
+    <p>ストウブは鋳物ホーロー（鉄）なので、<b>IHでもガスでも使える</b>よ。IHならではの注意点はこの4つ。</p>
+    <ul class="dots">
+      <li><b>火力は中火以下</b>。鋳物は熱をためこむので、強火にしなくても十分に沸く（強火はホーローを傷めやすい）</li>
+      <li><b>空焚き・空のまま予熱はしない</b>。IHは温まるのが速いので、特に注意</li>
+      <li>鍋底がIHの加熱コイルより極端に小さいと、うまく反応しないことがある</li>
+      <li>鍋が重いので、<b>天板の上で引きずらない</b>（ガラストップに傷がつく）。持ち上げて動かす</li>
+    </ul>
+  </section>
+
+  <section class="card" aria-labelledby="h-serve">
+    <h2 id="h-serve"><span class="dot"></span>1食分の目安</h2>
+    <div class="big">
+      <div><span class="cap">1食分</span><b>約300g</b><span class="cap">全量の1/5・大きめの茶碗に山盛り1杯</span></div>
+      <div><span class="cap">1食分のカロリー</span><b>約200kcal</b><span class="cap">たんぱく質 約19g</span></div>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>組み合わせ</th><th>kcal</th><th>P</th><th>F</th><th>C</th></tr></thead>
+        <tbody>
+          <tr><td>沼 1杯</td><td>約200</td><td>19g</td><td>2g</td><td>30g</td></tr>
+          <tr><td>沼 2杯</td><td>約400</td><td>38g</td><td>4g</td><td>60g</td></tr>
+          <tr class="em"><td>沼2杯＋鯖缶と玉ねぎの酢醤油和え（半量）</td><td>約570</td><td>58g</td><td>14g</td><td>64g</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap">※鶏むね皮なし300g・野菜はそれぞれ100〜200gとして計算したCORINの推定値。実際の量で変わる。</p>
+    <div class="tip"><h3>1日1食（目標 1,555kcal／P100g）のとき</h3><p>沼だけだと全然足りないので、<b>沼2杯＋鯖缶の和え物</b>を軸にして、残りはおかずで足す。沼には脂質がほぼ入ってないから、鯖缶で脂質（オメガ3）を補う組み合わせは理にかなってるよ。</p></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-freeze">
+    <h2 id="h-freeze"><span class="dot"></span>保存のしかた</h2>
+    <div class="freeze-head">
+      <div class="pill fr"><span class="cap">冷凍</span><b>2〜3週間</b></div>
+      <div class="pill"><span class="cap">冷蔵</span><b>2〜3日</b></div>
+    </div>
+    <ul class="dots">
+      <li><b>1食分ずつ</b>ジップ袋か保存容器に。袋なら平らにならすと、早く凍って解凍も早い</li>
+      <li>粗熱をしっかり取ってから冷凍庫へ（熱いままだと霜がつく）</li>
+      <li>温め直し：<b>水を大さじ1〜2足して</b>、レンジ600Wで4〜5分。途中で一度混ぜる</li>
+      <li>一度解凍したものは再冷凍しない</li>
+      <li>ブロッコリーとオクラは少しやわらかくなるけど、沼はもともとトロトロなので気にならない</li>
+    </ul>
+    <p class="cap">家庭の冷凍庫だと、1ヶ月を過ぎるあたりから味と食感が落ちやすい。</p>
+  </section>
+
+  <footer class="src">
+    <span>もとのレシピ</span>
+    <a href="https://www.youtube.com/watch?v=jjvVVo4X3Uc">料理研究家リュウジのバズレシピ「究極の減量食『沼』が本当に痩せるし旨い」</a>
+    <a href="https://www.youtube.com/watch?v=NJtgQEXAjNI">マッスルグリル「究極の減量食『沼』を大公開！」（本家）</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var KEY='numa-staub-checks';
+  var boxes=document.querySelectorAll('.ing input[type=checkbox]');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){}
+  boxes.forEach(function(b){
+    if(saved[b.id]) b.checked=true;
+    b.addEventListener('change',function(){
+      saved[b.id]=b.checked;
+      try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
