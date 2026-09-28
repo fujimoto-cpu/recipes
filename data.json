@@ -526,6 +526,42 @@
     "page": null
   },
   {
+    "id": "a71a4b67c6",
+    "title": "切り干し酢大根",
+    "source": {
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=-mePkrlebL8",
+      "handle": "糖質オフ専門・いずみの太らない食生活"
+    },
+    "media": {
+      "type": "image",
+      "file": "assets/a71a4b67c6.jpg"
+    },
+    "ingredients": [
+      "切り干し大根",
+      "塩昆布",
+      "酢",
+      "水"
+    ],
+    "ingredients_detail": [],
+    "tags": [
+      "youtube",
+      "recipe",
+      "腸活",
+      "発酵",
+      "食物繊維"
+    ],
+    "nutrition": {
+      "calories_kcal": null,
+      "protein_g": null,
+      "fat_g": null,
+      "carbs_g": null
+    },
+    "steps": [],
+    "caption_excerpt": "",
+    "page": null
+  },
+  {
     "id": "90df02e350",
     "title": "桃とズッキーニのカルダモン仕立て",
     "source": {
